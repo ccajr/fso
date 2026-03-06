@@ -9,6 +9,15 @@ const Button = ({ onClick, text }) => {
 }
 
 const Statistics = ({ good, neutral, bad, all, average, positive }) => {
+  
+  if (all === 0) {
+    return (
+      <>
+        <h1>statistics</h1>
+        <p> No feedback given </p>
+      </>
+    )
+  }
   return (
     <>
       <h1>statistics</h1>
