@@ -13,15 +13,32 @@ const App = () => {
   const [good, setGood] = useState(0)
   const [neutral, setNeutral] = useState(0)
   const [bad, setBad] = useState(0)
+  const [total, setTotal] = useState(0)
+  const [average, setAverage] = useState(0)
+  const [positive, setPositive] = useState(0)
+
+  const computeOverall = (pos, neg) => {
+    const count = total + 1;
+    setTotal(count)
+    setAverage((pos - neg) / count)
+    setPositive( (pos * 100) / count )
+  }
 
   const handleGood = () => {
-    setGood(good + 1)
+    const val = good + 1
+    setGood(val)
+    computeOverall(val, bad)
   }
+
   const handleNeutral = () => {
     setNeutral(neutral + 1)
+    computeOverall(good, bad)
   }
+
   const handleBad = () => {
-    setBad(bad + 1)
+    const val = bad + 1
+    setBad(val)
+    computeOverall(good, val)
   }
 
   return (
@@ -34,7 +51,10 @@ const App = () => {
       <p>
         good {good}<br/>
         neutral {neutral}<br/>
-        bad {bad}
+        bad {bad}<br/>
+        all {total}<br/>
+        average {average}<br/>
+        positive {positive} %
       </p>
     </div>
   )
