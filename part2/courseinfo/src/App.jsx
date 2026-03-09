@@ -3,19 +3,21 @@ const Course = ({ name, parts }) => {
 
   return (
     <div>
-      <Header course={name} />
+      <SubHeader course={name} />
       <Content parts={parts} />
       <Total total={total} />
     </div>
   )
 }
 
-const Header = (props) => <h1>{props.course}</h1>
+const Header = (props) => <h1>{props.text}</h1>
+
+const SubHeader = (props) => <h2>{props.course}</h2>
 
 const Content = ({ parts }) => (
   <div>
     {parts.map(part => 
-      <Part key={part.name} part={part} />
+      <Part key={part.id} part={part} />
     )}
   </div>
 )
@@ -29,27 +31,57 @@ const Part = (props) => (
 const Total = (props) => <h4>total of {props.total} exercises</h4>
 
 const App = () => {
-  const course = {
-    name: 'Half Stack application development',
-    parts: [
-      {
-        name: 'Fundamentals of React',
-        exercises: 10,
-      },
-      {
-        name: 'Using props to pass data',
-        exercises: 7,
-      },
-      {
-        name: 'State of a component',
-        exercises: 14,
-      },
-    ],
-  }
+  const courses = [
+    {
+      name: 'Half Stack application development',
+      id: 1,
+      parts: [
+        {
+          name: 'Fundamentals of React',
+          exercises: 10,
+          id: 1
+        },
+        {
+          name: 'Using props to pass data',
+          exercises: 7,
+          id: 2
+        },
+        {
+          name: 'State of a component',
+          exercises: 14,
+          id: 3
+        },
+        {
+          name: 'Redux',
+          exercises: 11,
+          id: 4
+        }
+      ]
+    }, 
+    {
+      name: 'Node.js',
+      id: 2,
+      parts: [
+        {
+          name: 'Routing',
+          exercises: 3,
+          id: 1
+        },
+        {
+          name: 'Middlewares',
+          exercises: 7,
+          id: 2
+        }
+      ]
+    }
+  ]
 
   return (
     <div>
-      <Course name={course.name} parts={course.parts} />
+      <Header text="Web development curriculum" />
+      {courses.map(course => 
+        <Course key={course.id} name={course.name} parts={course.parts} />
+      )}
     </div>
   )
 }
