@@ -32,7 +32,25 @@ const App = () => {
     }
 
     if (persons.some(person => person.name === newName)) {
-      alert(`${newName} is already added to phonebook`)
+      if (confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
+        const person = persons.find(p => p.name === newName)
+        const changedPerson = {
+          ...person, number: newNumber
+        }
+        
+        personService
+          .update(changedPerson.id, changedPerson)
+          .then(returnedPerson => {
+              setPersons(persons.map(p => p.name === newName ? returnedPerson : p))
+              setNewName('')
+              setNewNumber('')
+            })
+          .catch(error => {
+            alert(`${newName} was already deleted from server`)
+            setPersons(persons.filter(p => p.name !== newName))
+          })
+      }
+
       return
     }
     
@@ -42,9 +60,8 @@ const App = () => {
       id: String(nextId)
     }
 
-    setNextId(nextId + 1)
-
     personService.create(newPerson).then(returnedPerson => {
+        setNextId(nextId + 1)
         setPersons(persons.concat(returnedPerson))
         setNewName('')
         setNewNumber('')
