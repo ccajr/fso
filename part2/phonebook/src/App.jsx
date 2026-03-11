@@ -9,10 +9,18 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newFilter, setNewFilter] = useState('')
+  const [nextId, setNextId] = useState(0)
 
   useEffect(() => {
     personService.getAll().then(initialData => {
       setPersons(initialData)
+      
+      if (initialData.length === Number(initialData.at(-1).id)) {
+        setNextId(initialData.length + 1)
+      }
+      else {
+        setNextId(Math.max(...initialData.map(d => Number(d.id))) + 1)
+      }
     })
   }, [])
 
@@ -31,15 +39,23 @@ const App = () => {
     const newPerson = {
       name: newName,
       number: newNumber,
-      id: persons.length + 1
+      id: String(nextId)
     }
+
+    setNextId(nextId + 1)
 
     personService.create(newPerson).then(returnedPerson => {
         setPersons(persons.concat(returnedPerson))
         setNewName('')
         setNewNumber('')
       })
+  }
 
+  const deletePerson= (id, name) => {
+    if (confirm(`Delete ${name} ?`)) {
+      personService.remove(id)
+      .then((deletedPerson) => setPersons(persons.filter(p => p.id !== deletedPerson.id)))
+    }
   }
 
   const handleChange = (event) => {
@@ -73,7 +89,7 @@ const App = () => {
         />
 
       <h3>Numbers</h3>
-      <Persons personsToShow={personsToShow} />
+      <Persons personsToShow={personsToShow} onDelete={deletePerson} />
     </div>
   )
 }
