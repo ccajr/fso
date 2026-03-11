@@ -3,6 +3,7 @@ import Filter from './components/Filter'
 import Persons from './components/Persons'
 import PersonForm from './components/PersonForm'
 import personService from './services/persons'
+import Notification from './components/Notification'
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
@@ -10,6 +11,7 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [newFilter, setNewFilter] = useState('')
   const [nextId, setNextId] = useState(0)
+  const [newMessage, setNewMessage] = useState(null)
 
   useEffect(() => {
     personService.getAll().then(initialData => {
@@ -37,13 +39,14 @@ const App = () => {
         const changedPerson = {
           ...person, number: newNumber
         }
-        
+
         personService
           .update(changedPerson.id, changedPerson)
           .then(returnedPerson => {
               setPersons(persons.map(p => p.name === newName ? returnedPerson : p))
               setNewName('')
               setNewNumber('')
+              displayNotification(`Updated ${returnedPerson.name}'s number`, false)
             })
           .catch(error => {
             alert(`${newName} was already deleted from server`)
@@ -65,14 +68,29 @@ const App = () => {
         setPersons(persons.concat(returnedPerson))
         setNewName('')
         setNewNumber('')
+        displayNotification(`Added ${returnedPerson.name}`, false)
       })
   }
 
   const deletePerson= (id, name) => {
     if (confirm(`Delete ${name} ?`)) {
       personService.remove(id)
-      .then((deletedPerson) => setPersons(persons.filter(p => p.id !== deletedPerson.id)))
+      .then((deletedPerson) => {
+        setPersons(persons.filter(p => p.id !== deletedPerson.id))
+        displayNotification(`Deleted ${name}`, false)
+      })
     }
+  }
+
+  const displayNotification = (message, isError) => {
+    setNewMessage({
+      content: message,
+      type: isError
+    })
+
+    setTimeout(() => {
+      setNewMessage(null)
+    }, 5000)
   }
 
   const handleChange = (event) => {
@@ -95,6 +113,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={newMessage} />
       <Filter name='filter' value={newFilter} onChange={handleChange} />
 
       <h3>add a new</h3>
