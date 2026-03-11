@@ -49,7 +49,7 @@ const App = () => {
               displayNotification(`Updated ${returnedPerson.name}'s number`, false)
             })
           .catch(error => {
-            alert(`${newName} was already deleted from server`)
+            displayNotification(`Information of ${newName} has already been removed from server`, true)
             setPersons(persons.filter(p => p.name !== newName))
           })
       }
@@ -85,7 +85,7 @@ const App = () => {
   const displayNotification = (message, isError) => {
     setNewMessage({
       content: message,
-      type: isError
+      isError: isError
     })
 
     setTimeout(() => {
