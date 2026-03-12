@@ -1,4 +1,4 @@
-const Countries = ({ countriesToShow, isTooMany }) => {
+const Countries = ({ countriesToShow, isTooMany, handleShow }) => {
   if (isTooMany) {
     return (
       <div>Too many matches, specify another filter</div>
@@ -12,7 +12,9 @@ const Countries = ({ countriesToShow, isTooMany }) => {
   return (
     <div>
       {countriesToShow.map(name => 
-        <div key={name}>{name}</div>
+        <div key={name}>
+            {name} <button value={name} onClick={handleShow}>Show</button>
+        </div>
       )}
     </div>
   )

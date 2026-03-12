@@ -49,10 +49,17 @@ const App = () => {
     }
   }
 
+  const handleShow = (event) => {
+    countryService.get(event.target.value).then(data => setSelectedCountry(data))
+  }
+
   return (
     <div>
       <Filter filter={filter} onChange={handleChange} />
-      <Countries countriesToShow={countryOptions} isTooMany={isTooMany} />
+      <Countries
+        countriesToShow={countryOptions}
+        isTooMany={isTooMany}
+        handleShow={handleShow} />
       <Country details={selectedCountry} />
     </div>
   )
