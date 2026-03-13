@@ -3,6 +3,7 @@ import Countries from './components/Countries'
 import Country from './components/Country'
 import Filter from './components/Filter'
 import countryService from './services/countries'
+import weatherService from './services/weather'
 
 const App = () => {
   const [allCountryNames, setAllCountryNames] = useState([])
@@ -10,6 +11,7 @@ const App = () => {
   const [isTooMany, setIsTooMany] = useState(false)
   const [countryOptions, setCountryOptions] = useState(null)
   const [selectedCountry, setSelectedCountry] = useState(null)
+  const [weather, setWeather] = useState(null)
 
   useEffect(() => {
     countryService
@@ -18,6 +20,23 @@ const App = () => {
         setAllCountryNames(initialData.map(d => d.name.common))
       })
   }, [])
+
+  useEffect(() => {
+    if (selectedCountry === null) {
+      return
+    }
+
+    // Get weather data everytime a selected country changes
+    weatherService
+      .getByCity(selectedCountry.capital[0], selectedCountry.cca2)
+      .then(weather => {
+        setWeather(weather)
+      })
+      .catch(error => {
+        setWeather(null)
+        console.log(`Failed to retrieve the weather data of ${selectedCountry.capital[0]}, ${selectedCountry.name.common}`)
+      })
+  }, [selectedCountry])
 
   const handleChange = (event) => {
     setFilter(event.target.value)
@@ -38,7 +57,7 @@ const App = () => {
     const results = allCountryNames.filter(name => name.toLowerCase().includes(event.target.value.toLowerCase()))
     
     if (results.length === 1) {
-      countryService.get(results[0]).then(data => setSelectedCountry(data))
+      getCountryDetails(results[0])
     }
     else if (results.length > 10) {
       setCountryOptions([])
@@ -50,7 +69,13 @@ const App = () => {
   }
 
   const handleShow = (event) => {
-    countryService.get(event.target.value).then(data => setSelectedCountry(data))
+    getCountryDetails(event.target.value)
+  }
+
+  const getCountryDetails = (name) => {
+    countryService.get(name).then(data => {
+      setSelectedCountry(data)
+    })
   }
 
   return (
@@ -60,7 +85,7 @@ const App = () => {
         countriesToShow={countryOptions}
         isTooMany={isTooMany}
         handleShow={handleShow} />
-      <Country details={selectedCountry} />
+      <Country details={selectedCountry} weather={weather} />
     </div>
   )
 }
