@@ -58,14 +58,29 @@ app.get('/info', (request, response) => {
 })
 
 const generateId = () => {
-    return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
+    return String(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER))
 }
 
 app.post('/api/persons', (request, response) => {
     const body = request.body
-    if (!body.name || !body.number) {
+    const missing = []
+
+    if (!body.name) {
+        missing.push('name')
+    }
+    if (!body.number) {
+        missing.push('number')
+    }
+
+    if (missing.length > 0) {
         return response.status(400).json({
-            error: 'name and number are required'
+            error: `Missing required fields: ${missing.join(", ")}`
+        })
+    }
+
+    if (persons.some(person => person.name === body.name)) {
+        return response.status(409).json({
+            error: 'name must be unique'
         })
     }
 
