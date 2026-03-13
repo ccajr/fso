@@ -1,0 +1,24 @@
+{
+  "name": "phonebook",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ccajr/fso.git"
+  },
+  "author": "Cathlyn Clyde Resmeros",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ccajr/fso/issues"
+  },
+  "homepage": "https://github.com/ccajr/fso#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
