@@ -10,19 +10,11 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newFilter, setNewFilter] = useState('')
-  const [nextId, setNextId] = useState(0)
   const [newMessage, setNewMessage] = useState(null)
 
   useEffect(() => {
     personService.getAll().then(initialData => {
       setPersons(initialData)
-      
-      if (initialData.length === Number(initialData.at(-1).id)) {
-        setNextId(initialData.length + 1)
-      }
-      else {
-        setNextId(Math.max(...initialData.map(d => Number(d.id))) + 1)
-      }
     })
   }, [])
 
@@ -60,11 +52,9 @@ const App = () => {
     const newPerson = {
       name: newName,
       number: newNumber,
-      id: String(nextId)
     }
 
     personService.create(newPerson).then(returnedPerson => {
-        setNextId(nextId + 1)
         setPersons(persons.concat(returnedPerson))
         setNewName('')
         setNewNumber('')
