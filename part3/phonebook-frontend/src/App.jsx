@@ -60,6 +60,7 @@ const App = () => {
         setNewNumber('')
         displayNotification(`Added ${returnedPerson.name}`, false)
       })
+      .catch(error => displayNotification(error.response.data.error, true))
   }
 
   const deletePerson= (id, name) => {

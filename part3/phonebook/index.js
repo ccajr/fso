@@ -53,71 +53,45 @@ app.get('/info', (request, response) => {
     })
 })
 
-app.post('/api/persons', (request, response) => {
-    const body = request.body
-    const missing = []
+app.post('/api/persons', (request, response, next) => {
+    const { name, number } = request.body
 
-    if (!body.name) {
-        missing.push('name')
-    }
-    if (!body.number) {
-        missing.push('number')
-    }
-
-    if (missing.length > 0) {
-        return response.status(400).json({
-            error: `Missing required fields: ${missing.join(", ")}`
-        })
-    }
-
-    Person.find({ name: body.name }).then(duplicatePerson => {
+    Person.find({ name: name }).then(duplicatePerson => {
         if (duplicatePerson.length > 0) {
+            console.log(duplicatePerson)
             return response.status(409).json({
                 error: 'name must be unique'
             })
         }
 
         const person = new Person({
-            name: body.name,
-            number: body.number,
+            name: name,
+            number: number,
         })
 
         person.save().then(savedPerson => {
             response.json(savedPerson)
         })
+        .catch(error => next(error))
     })
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
-    const body = request.body
-    const missing = []
-
-    if (!body.name) {
-        missing.push('name')
-    }
-    if (!body.number) {
-        missing.push('number')
-    }
-
-    if (missing.length > 0) {
-        return response.status(400).json({
-            error: `Missing required fields: ${missing.join(", ")}`
-        })
-    }
+    const { name, number } = request.body
 
     Person.findById(request.params.id).then(person => {
         if (!person) {
             return response.status(404).end()
         }
 
-        person.name = body.name
-        person.number = body.number
+        person.name = name
+        person.number = number
 
         person.save().then(updatedPerson => {
             return response.json(updatedPerson)
         })
+        .catch(error => next(error))
     })
-    .catch(error => next(error))
 })
 
 const errorHandler = (error, request, response, next) => {
@@ -125,6 +99,8 @@ const errorHandler = (error, request, response, next) => {
 
     if (error.name === 'CastError') {
         return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).send({ error: error.message })
     }
 
     next(error)
