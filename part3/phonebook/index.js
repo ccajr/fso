@@ -18,9 +18,6 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :b
     skip: function (req, res) { return req.method !== 'POST'}
 }))
 
-
-let persons = []
-
 app.get('/api/persons', (request, response) => {
     Person.find({}).then(persons => {
         response.json(persons)
@@ -47,11 +44,13 @@ app.delete('/api/persons/:id', (request, response, next) => {
 })
 
 app.get('/info', (request, response) => {
-    const html = `
-        <p>Phonebook has info for ${persons.length} people</p>
-        <p>${new Date()}</p>
-    `
-    response.send(html)
+    Person.find({}).then(persons => {
+        const html = `
+            <p>Phonebook has info for ${persons.length} people</p>
+            <p>${new Date()}</p>
+        `
+        response.send(html)
+    })
 })
 
 app.post('/api/persons', (request, response) => {
@@ -71,33 +70,48 @@ app.post('/api/persons', (request, response) => {
         })
     }
 
-    if (persons.some(person => person.name === body.name)) {
-        return response.status(409).json({
-            error: 'name must be unique'
+    Person.find({ name: body.name }).then(duplicatePerson => {
+        if (duplicatePerson.length > 0) {
+            return response.status(409).json({
+                error: 'name must be unique'
+            })
+        }
+
+        const person = new Person({
+            name: body.name,
+            number: body.number,
         })
-    }
 
-    const person = new Person({
-        name: body.name,
-        number: body.number,
+        person.save().then(savedPerson => {
+            response.json(savedPerson)
+        })
     })
-
-    person.save().then(savedPerson => {
-        response.json(savedPerson)
-    })
-
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
-    const { name, number } = request.body
+    const body = request.body
+    const missing = []
+
+    if (!body.name) {
+        missing.push('name')
+    }
+    if (!body.number) {
+        missing.push('number')
+    }
+
+    if (missing.length > 0) {
+        return response.status(400).json({
+            error: `Missing required fields: ${missing.join(", ")}`
+        })
+    }
 
     Person.findById(request.params.id).then(person => {
         if (!person) {
             return response.status(404).end()
         }
 
-        person.name = name
-        person.number = number
+        person.name = body.name
+        person.number = body.number
 
         person.save().then(updatedPerson => {
             return response.json(updatedPerson)
