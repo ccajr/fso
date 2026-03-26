@@ -5,7 +5,7 @@ mongoose.set('strictQuery', false)
 const url = process.env.MONGODB_URI
 
 mongoose.connect(url, { family: 4 })
-  .then(result => {
+  .then(() => {
     console.log('connected to MongoDB')
   })
   .catch(error => {
@@ -13,21 +13,21 @@ mongoose.connect(url, { family: 4 })
   })
 
 const personSchema = new mongoose.Schema({
-    name: {
-      type: String,
-      minLength: [3, '`{VALUE}` must be at least 3 characters long'],
-      required: true
-    },
-    number: {
-      type: String,
-      validate: {
-        validator: function(v) {
-          return /^\d{2}-\d{6,}$|^(\d{3}-\d{5,})$/.test(v);
-        },
-        message: '{VALUE} is not a valid phone number'
+  name: {
+    type: String,
+    minLength: [3, '`{VALUE}` must be at least 3 characters long'],
+    required: true
+  },
+  number: {
+    type: String,
+    validate: {
+      validator: function(v) {
+        return /^\d{2}-\d{6,}$|^(\d{3}-\d{5,})$/.test(v)
       },
-      required: true
+      message: '{VALUE} is not a valid phone number'
     },
+    required: true
+  },
 })
 
 personSchema.set('toJSON', {
