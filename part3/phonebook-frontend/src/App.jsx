@@ -41,8 +41,12 @@ const App = () => {
               displayNotification(`Updated ${returnedPerson.name}'s number`, false)
             })
           .catch(error => {
-            displayNotification(`Information of ${newName} has already been removed from server`, true)
-            setPersons(persons.filter(p => p.name !== newName))
+            if (error.response.data.error) {
+              displayNotification(error.response.data.error, true)
+            } else {
+              displayNotification(`Information of ${newName} has already been removed from server`, true)
+              setPersons(persons.filter(p => p.name !== newName))
+            }
           })
       }
 
