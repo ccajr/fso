@@ -64,37 +64,30 @@ const blogs = [
   }
 ]
 
-test('dummy returns one', () => {
-  const blogs = []
-
-  const result = listHelper.dummy(blogs)
-  assert.strictEqual(result, 1)
-})
-
-describe('total likes', () => {
-
-  test('of empty list is zero', () => {
-    const result = listHelper.totalLikes([])
-    assert.strictEqual(result, 0)
+describe('favorite blog', () => {
+  test('of empty list is undefined', () => {
+    const result = listHelper.favoriteBlog([])
+    assert.deepStrictEqual(result, undefined)
   })
 
-  test('when list has only one blog, equals the likes of that', () => {
-    const result = listHelper.totalLikes(listWithOneBlog)
-    assert.strictEqual(result, 5)
+  test('when list has only one blog, equals that blog', () => {
+    const result = listHelper.favoriteBlog(listWithOneBlog)
+    assert.deepStrictEqual(result, listWithOneBlog.at(0))
   })
 
-  test('of a  bigger list is calculated right', () => {
-    const result = listHelper.totalLikes(blogs)
-    assert.strictEqual(result, 36)
+  test('of a bigger list with one favorite', () => {
+    const result = listHelper.favoriteBlog(blogs)
+    assert.deepStrictEqual(result, blogs.at(2))
   })
 
-  test('of undefined is zero', () => {
-    const result = listHelper.totalLikes(undefined)
-    assert.strictEqual(result, 0)
-  })
+  test('of a bigger list with multiple favorites (any of the favorites is returned)', () => {
+    const MAX_LIKES = 99
+    const multipleFaves = Array.from(blogs)
+    multipleFaves.at(1).likes = MAX_LIKES
+    multipleFaves.at(4).likes = MAX_LIKES
 
-  test('of null is zero', () => {
-    const result = listHelper.totalLikes(null)
-    assert.strictEqual(result, 0)
+    const possibleFaves = [multipleFaves.at(1), multipleFaves.at(4)]
+    const result = listHelper.favoriteBlog(multipleFaves)
+    assert.deepStrictEqual(possibleFaves.includes(result), true)
   })
 })
