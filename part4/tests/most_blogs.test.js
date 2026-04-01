@@ -64,29 +64,41 @@ const blogs = [
   }
 ]
 
-describe('total likes', () => {
-  test('of empty list is zero', () => {
-    const result = listHelper.totalLikes([])
-    assert.strictEqual(result, 0)
+describe('most blogs', () => {
+  test('of empty list is undefined', () => {
+    const result = listHelper.mostBlogs([])
+    assert.strictEqual(result, undefined)
   })
 
   test('when list has only one blog, equals the likes of that', () => {
-    const result = listHelper.totalLikes(listWithOneBlog)
-    assert.strictEqual(result, 5)
+    const result = listHelper.mostBlogs(listWithOneBlog)
+    assert.deepStrictEqual(result, {
+      author: listWithOneBlog[0].author,
+      blogs: 1
+    })
   })
 
-  test('of a bigger list is calculated right', () => {
-    const result = listHelper.totalLikes(blogs)
-    assert.strictEqual(result, 36)
+  test('of a bigger list with one winner is determined right', () => {
+    const result = listHelper.mostBlogs(blogs)
+    assert.deepStrictEqual(result, {
+      author: 'Robert C. Martin',
+      blogs: 3
+    })
   })
 
-  test('of undefined is zero', () => {
-    const result = listHelper.totalLikes(undefined)
-    assert.strictEqual(result, 0)
-  })
+  test('of a bigger list with multiple winners', () => {
+    const multipleWinners = blogs.concat({
+      _id: '5a422aa71b54a676234d17f1',
+      title: 'Placeholder title for a blog',
+      author: 'Edsger W. Dijkstra',
+      url: 'http://www.example.com',
+      likes: 12,
+      __v: 0
+    })
 
-  test('of null is zero', () => {
-    const result = listHelper.totalLikes(null)
-    assert.strictEqual(result, 0)
+    const result = listHelper.mostBlogs(multipleWinners)
+    const possibleWinners = ['Robert C. Martin', 'Edsger W. Dijkstra']
+    const isWinner = possibleWinners.some(winner => winner === result.author && 3 === result.blogs)
+    assert.strictEqual(isWinner, true)
   })
 })
