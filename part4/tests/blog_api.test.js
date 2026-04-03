@@ -28,7 +28,29 @@ test('correct amount of blogs are returned', async () => {
 
 test('unique identifier property of the blog posts is named id', async () => {
   const response = await api.get('/api/blogs')
-  assert.strictEqual(Object.hasOwn(response.body[0], 'id'), true)
+  assert(Object.hasOwn(response.body[0], 'id'))
+})
+
+test('a valid blog post can be added', async () => {
+  const newBlog = {
+    title: 'Canonical string reduction',
+    author: 'Edsger W. Dijkstra',
+    url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html',
+    likes: 12
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(201)
+    .expect('Content-Type', /application\/json/)
+
+  const blogs = await helper.notesInDb()
+  assert.strictEqual(blogs.length, helper.initialBlogs.length + 1)
+
+  // eslint-disable-next-line no-unused-vars
+  const { id: _, ...targetBlogNoId } = blogs.find(b => b.title === newBlog.title)
+  assert.deepStrictEqual(targetBlogNoId, newBlog)
 })
 
 after(async () => {
