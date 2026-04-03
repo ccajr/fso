@@ -20,10 +20,15 @@ test('blogs are returned as json', async () => {
     .expect('Content-Type', /application\/json/)
 })
 
-test('all blogs are returned', async () => {
+test('correct amount of blogs are returned', async () => {
   const response = await api.get('/api/blogs')
 
   assert.strictEqual(response.body.length, helper.initialBlogs.length)
+})
+
+test('unique identifier property of the blog posts is named id', async () => {
+  const response = await api.get('/api/blogs')
+  assert.strictEqual(Object.hasOwn(response.body[0], 'id'), true)
 })
 
 after(async () => {
