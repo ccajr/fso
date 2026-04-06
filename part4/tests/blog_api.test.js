@@ -53,7 +53,7 @@ test('a valid blog post can be added', async () => {
   assert.deepStrictEqual(targetBlogNoId, newBlog)
 })
 
-test('a blog post can be added even if \'likes\' property is missing from the request (0 will be set)', async () => {
+test('a blog post can be added even if \'likes\' is missing (0 will be set)', async () => {
   const newBlog = {
     title: 'Canonical string reduction',
     author: 'Edsger W. Dijkstra',
@@ -73,6 +73,53 @@ test('a blog post can be added even if \'likes\' property is missing from the re
   const { id: _, likes: savedLikes, ...targetBlogNoId } = blogs.find(b => b.title === newBlog.title)
   assert.deepStrictEqual(targetBlogNoId, newBlog)
   assert.deepStrictEqual(savedLikes, 0)
+})
+
+test('a blog post without \'title\' cannot be added', async () => {
+  const missingTitle = {
+    author: 'Edsger W. Dijkstra (no title)',
+    url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html',
+    likes: 12
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(missingTitle)
+    .expect(400)
+
+  const blogs = await helper.notesInDb()
+  assert.strictEqual(blogs.length, helper.initialBlogs.length)
+})
+
+test('a blog post without \'url\' cannot be added', async () => {
+  const missingUrl = {
+    title: 'Canonical string reduction (no url)',
+    author: 'Edsger W. Dijkstra',
+    likes: 12
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(missingUrl)
+    .expect(400)
+
+  const blogs = await helper.notesInDb()
+  assert.strictEqual(blogs.length, helper.initialBlogs.length)
+})
+
+test('a blog post without \'title\' and \'url\' cannot be added', async () => {
+  const missingReq = {
+    author: 'Edsger W. Dijkstra (both are missing)',
+    likes: 12
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(missingReq)
+    .expect(400)
+
+  const blogs = await helper.notesInDb()
+  assert.strictEqual(blogs.length, helper.initialBlogs.length)
 })
 
 after(async () => {
