@@ -122,6 +122,20 @@ test('a blog post without \'title\' and \'url\' cannot be added', async () => {
   assert.strictEqual(blogs.length, helper.initialBlogs.length)
 })
 
+test('a blog post can be deleted', async () => {
+  const blogs = await helper.notesInDb()
+  const blogToDelete = blogs[0]
+
+  await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
+
+  const blogsAfterDelete = await helper.notesInDb()
+
+  const ids = blogsAfterDelete.map(n => n.id)
+  assert(!ids.includes(blogsAfterDelete.id))
+
+  assert.strictEqual(blogsAfterDelete.length, helper.initialBlogs.length - 1)
+})
+
 after(async () => {
   await mongoose.connection.close()
 })
