@@ -53,6 +53,28 @@ test('a valid blog post can be added', async () => {
   assert.deepStrictEqual(targetBlogNoId, newBlog)
 })
 
+test('a blog post can be added even if \'likes\' property is missing from the request (0 will be set)', async () => {
+  const newBlog = {
+    title: 'Canonical string reduction',
+    author: 'Edsger W. Dijkstra',
+    url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html'
+  }
+
+  await api
+    .post('/api/blogs')
+    .send(newBlog)
+    .expect(201)
+    .expect('Content-Type', /application\/json/)
+
+  const blogs = await helper.notesInDb()
+  assert.strictEqual(blogs.length, helper.initialBlogs.length + 1)
+
+  // eslint-disable-next-line no-unused-vars
+  const { id: _, likes: savedLikes, ...targetBlogNoId } = blogs.find(b => b.title === newBlog.title)
+  assert.deepStrictEqual(targetBlogNoId, newBlog)
+  assert.deepStrictEqual(savedLikes, 0)
+})
+
 after(async () => {
   await mongoose.connection.close()
 })
