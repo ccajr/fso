@@ -1,163 +1,279 @@
 const assert = require('node:assert')
-const { beforeEach, test, after } = require('node:test')
+const bcrypt = require('bcrypt')
+const { beforeEach, test, after, describe } = require('node:test')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const helper = require('./test_helper')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 const api = supertest(app)
 
-beforeEach(async () => {
-  await Blog.deleteMany()
-  await Blog.insertMany(helper.initialBlogs)
+describe('when there is initially some blogs saved', () => {
+  beforeEach(async () => {
+    await Blog.deleteMany()
+    await Blog.insertMany(helper.initialBlogs)
+  })
+
+  test('blogs are returned as json', async () => {
+    await api
+      .get('/api/blogs')
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+  })
+
+  test('correct amount of blogs are returned', async () => {
+    const response = await api.get('/api/blogs')
+
+    assert.strictEqual(response.body.length, helper.initialBlogs.length)
+  })
+
+  test('unique identifier property of the blog posts is named id', async () => {
+    const response = await api.get('/api/blogs')
+    assert(Object.hasOwn(response.body[0], 'id'))
+  })
+
+  test('a valid blog post can be added', async () => {
+    const newBlog = {
+      title: 'Canonical string reduction',
+      author: 'Edsger W. Dijkstra',
+      url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html',
+      likes: 12
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const blogs = await helper.blogsInDb()
+    assert.strictEqual(blogs.length, helper.initialBlogs.length + 1)
+
+    // eslint-disable-next-line no-unused-vars
+    const { id: _, ...targetBlogNoId } = blogs.find(b => b.title === newBlog.title)
+    assert.deepStrictEqual(targetBlogNoId, newBlog)
+  })
+
+  test('a blog post can be added even if \'likes\' is missing (0 will be set)', async () => {
+    const newBlog = {
+      title: 'Canonical string reduction',
+      author: 'Edsger W. Dijkstra',
+      url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html'
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const blogs = await helper.blogsInDb()
+    assert.strictEqual(blogs.length, helper.initialBlogs.length + 1)
+
+    // eslint-disable-next-line no-unused-vars
+    const { id: _, likes: savedLikes, ...targetBlogNoId } = blogs.find(b => b.title === newBlog.title)
+    assert.deepStrictEqual(targetBlogNoId, newBlog)
+    assert.deepStrictEqual(savedLikes, 0)
+  })
+
+  test('a blog post without \'title\' cannot be added', async () => {
+    const missingTitle = {
+      author: 'Edsger W. Dijkstra (no title)',
+      url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html',
+      likes: 12
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(missingTitle)
+      .expect(400)
+
+    const blogs = await helper.blogsInDb()
+    assert.strictEqual(blogs.length, helper.initialBlogs.length)
+  })
+
+  test('a blog post without \'url\' cannot be added', async () => {
+    const missingUrl = {
+      title: 'Canonical string reduction (no url)',
+      author: 'Edsger W. Dijkstra',
+      likes: 12
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(missingUrl)
+      .expect(400)
+
+    const blogs = await helper.blogsInDb()
+    assert.strictEqual(blogs.length, helper.initialBlogs.length)
+  })
+
+  test('a blog post without \'title\' and \'url\' cannot be added', async () => {
+    const missingReq = {
+      author: 'Edsger W. Dijkstra (both are missing)',
+      likes: 12
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(missingReq)
+      .expect(400)
+
+    const blogs = await helper.blogsInDb()
+    assert.strictEqual(blogs.length, helper.initialBlogs.length)
+  })
+
+  test('a blog post can be deleted', async () => {
+    const blogs = await helper.blogsInDb()
+    const blogToDelete = blogs[0]
+
+    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
+
+    const blogsAfterDelete = await helper.blogsInDb()
+
+    const ids = blogsAfterDelete.map(n => n.id)
+    assert(!ids.includes(blogsAfterDelete.id))
+
+    assert.strictEqual(blogsAfterDelete.length, helper.initialBlogs.length - 1)
+  })
+
+  test('a blog post can be updated', async () => {
+    const blogs = await helper.blogsInDb()
+    const blogToUpdate = blogs[0]
+
+    const updatedBlog = {
+      ...blogToUpdate,
+      title: 'Updated Title',
+      author: 'Updated Author',
+      url: 'http://updated.url',
+      likes: 999
+    }
+
+    await api
+      .put(`/api/blogs/${blogToUpdate.id}`)
+      .send(updatedBlog)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    const blogsAfterUpdate = await helper.blogsInDb()
+    const updatedBlogInDb = blogsAfterUpdate.find(b => b.id === blogToUpdate.id)
+
+    assert.deepStrictEqual(updatedBlogInDb, updatedBlog)
+  })
 })
 
-test('blogs are returned as json', async () => {
-  await api
-    .get('/api/blogs')
-    .expect(200)
-    .expect('Content-Type', /application\/json/)
-})
+describe('when there is initially one user in db', () => {
+  beforeEach(async () => {
+    await User.deleteMany({})
 
-test('correct amount of blogs are returned', async () => {
-  const response = await api.get('/api/blogs')
+    const passwordHash = await bcrypt.hash('sekret', 10)
+    const user = new User({ username: 'root', name: 'admin', passwordHash })
 
-  assert.strictEqual(response.body.length, helper.initialBlogs.length)
-})
+    await user.save()
+  })
 
-test('unique identifier property of the blog posts is named id', async () => {
-  const response = await api.get('/api/blogs')
-  assert(Object.hasOwn(response.body[0], 'id'))
-})
+  test('creation succeeds with a fresh username', async () => {
+    const usersAtStart = await helper.usersInDb()
 
-test('a valid blog post can be added', async () => {
-  const newBlog = {
-    title: 'Canonical string reduction',
-    author: 'Edsger W. Dijkstra',
-    url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html',
-    likes: 12
-  }
+    const newUser = {
+      username: 'mluukkai',
+      name: 'Matti Luukkainen',
+      password: 'salainen',
+    }
 
-  await api
-    .post('/api/blogs')
-    .send(newBlog)
-    .expect(201)
-    .expect('Content-Type', /application\/json/)
+    await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
 
-  const blogs = await helper.notesInDb()
-  assert.strictEqual(blogs.length, helper.initialBlogs.length + 1)
+    const usersAtEnd = await helper.usersInDb()
+    assert.strictEqual(usersAtEnd.length, usersAtStart.length + 1)
 
-  // eslint-disable-next-line no-unused-vars
-  const { id: _, ...targetBlogNoId } = blogs.find(b => b.title === newBlog.title)
-  assert.deepStrictEqual(targetBlogNoId, newBlog)
-})
+    const usernames = usersAtEnd.map(u => u.username)
+    assert(usernames.includes(newUser.username))
+  })
 
-test('a blog post can be added even if \'likes\' is missing (0 will be set)', async () => {
-  const newBlog = {
-    title: 'Canonical string reduction',
-    author: 'Edsger W. Dijkstra',
-    url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html'
-  }
+  test('creation fails with proper statuscode and message if username already taken', async () => {
+    const usersAtStart = await helper.usersInDb()
 
-  await api
-    .post('/api/blogs')
-    .send(newBlog)
-    .expect(201)
-    .expect('Content-Type', /application\/json/)
+    const newUser = {
+      username: 'root',
+      name: 'Superuser',
+      password: 'salainen',
+    }
 
-  const blogs = await helper.notesInDb()
-  assert.strictEqual(blogs.length, helper.initialBlogs.length + 1)
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
 
-  // eslint-disable-next-line no-unused-vars
-  const { id: _, likes: savedLikes, ...targetBlogNoId } = blogs.find(b => b.title === newBlog.title)
-  assert.deepStrictEqual(targetBlogNoId, newBlog)
-  assert.deepStrictEqual(savedLikes, 0)
-})
+    const usersAtEnd = await helper.usersInDb()
+    assert(result.body.error.includes('expected `username` to be unique'))
 
-test('a blog post without \'title\' cannot be added', async () => {
-  const missingTitle = {
-    author: 'Edsger W. Dijkstra (no title)',
-    url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html',
-    likes: 12
-  }
+    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+  })
 
-  await api
-    .post('/api/blogs')
-    .send(missingTitle)
-    .expect(400)
+  test('creation fails with proper statuscode and message if username is less than 3 characters long', async () => {
+    const usersAtStart = await helper.usersInDb()
 
-  const blogs = await helper.notesInDb()
-  assert.strictEqual(blogs.length, helper.initialBlogs.length)
-})
+    const newUser = {
+      username: 'fo',
+      name: 'Superuser',
+      password: 'salainen',
+    }
 
-test('a blog post without \'url\' cannot be added', async () => {
-  const missingUrl = {
-    title: 'Canonical string reduction (no url)',
-    author: 'Edsger W. Dijkstra',
-    likes: 12
-  }
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
 
-  await api
-    .post('/api/blogs')
-    .send(missingUrl)
-    .expect(400)
+    const usersAtEnd = await helper.usersInDb()
+    assert(result.body.error.includes('`fo` must be at least 3 characters long'))
 
-  const blogs = await helper.notesInDb()
-  assert.strictEqual(blogs.length, helper.initialBlogs.length)
-})
+    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+  })
 
-test('a blog post without \'title\' and \'url\' cannot be added', async () => {
-  const missingReq = {
-    author: 'Edsger W. Dijkstra (both are missing)',
-    likes: 12
-  }
+  test('creation fails with proper statuscode and message if password is less than 3 characters long', async () => {
+    const usersAtStart = await helper.usersInDb()
 
-  await api
-    .post('/api/blogs')
-    .send(missingReq)
-    .expect(400)
+    const newUser = {
+      username: 'root',
+      name: 'Superuser',
+      password: 'fo',
+    }
 
-  const blogs = await helper.notesInDb()
-  assert.strictEqual(blogs.length, helper.initialBlogs.length)
-})
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
 
-test('a blog post can be deleted', async () => {
-  const blogs = await helper.notesInDb()
-  const blogToDelete = blogs[0]
+    const usersAtEnd = await helper.usersInDb()
+    assert(result.body.error.includes('password must be at least 3 characters long'))
 
-  await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
+    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+  })
 
-  const blogsAfterDelete = await helper.notesInDb()
+  test('creation fails with proper statuscode and message if password is missing', async () => {
+    const usersAtStart = await helper.usersInDb()
 
-  const ids = blogsAfterDelete.map(n => n.id)
-  assert(!ids.includes(blogsAfterDelete.id))
+    const newUser = {
+      username: 'root',
+      name: 'Superuser',
+    }
 
-  assert.strictEqual(blogsAfterDelete.length, helper.initialBlogs.length - 1)
-})
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
 
-test('a blog post can be updated', async () => {
-  const blogs = await helper.notesInDb()
-  const blogToUpdate = blogs[0]
+    const usersAtEnd = await helper.usersInDb()
+    assert(result.body.error.includes('password missing'))
 
-  const updatedBlog = {
-    ...blogToUpdate,
-    title: 'Updated Title',
-    author: 'Updated Author',
-    url: 'http://updated.url',
-    likes: 999
-  }
-
-  await api
-    .put(`/api/blogs/${blogToUpdate.id}`)
-    .send(updatedBlog)
-    .expect(200)
-    .expect('Content-Type', /application\/json/)
-
-  const blogsAfterUpdate = await helper.notesInDb()
-  const updatedBlogInDb = blogsAfterUpdate.find(b => b.id === blogToUpdate.id)
-
-  assert.deepStrictEqual(updatedBlogInDb, updatedBlog)
+    assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+  })
 })
 
 after(async () => {
