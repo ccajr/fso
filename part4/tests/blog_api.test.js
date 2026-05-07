@@ -9,11 +9,28 @@ const Blog = require('../models/blog')
 const User = require('../models/user')
 
 const api = supertest(app)
+let token
 
 describe('when there is initially some blogs saved', () => {
+
   beforeEach(async () => {
+    await User.deleteMany()
+
+    const passwordHash = await bcrypt.hash('sekret', 10)
+    const user = new User({ username: 'root', passwordHash })
+
+    const savedUser = await user.save()
+
+    const response = await api.post('/api/login')
+      .send({ username: 'root', password: 'sekret' })
+    token = response.body.token
+
     await Blog.deleteMany()
-    await Blog.insertMany(helper.initialBlogs)
+    helper.initialBlogs.forEach(blog => blog.user = savedUser._id)
+    const savedBlogs = await Blog.insertMany(helper.initialBlogs)
+
+    savedUser.blogs = savedBlogs.map(b => b._id)
+    await savedUser.save()
   })
 
   test('blogs are returned as json', async () => {
@@ -44,6 +61,7 @@ describe('when there is initially some blogs saved', () => {
 
     await api
       .post('/api/blogs')
+      .auth(token, { type: 'bearer' })
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -51,9 +69,15 @@ describe('when there is initially some blogs saved', () => {
     const blogs = await helper.blogsInDb()
     assert.strictEqual(blogs.length, helper.initialBlogs.length + 1)
 
-    // eslint-disable-next-line no-unused-vars
-    const { id: _, ...targetBlogNoId } = blogs.find(b => b.title === newBlog.title)
+    const users = await helper.usersInDb()
+    const userIds = users.map(u => u.id)
+
+    const { id: blogId, user: blogUser, ...targetBlogNoId } = blogs.find(b => b.title === newBlog.title)
     assert.deepStrictEqual(targetBlogNoId, newBlog)
+    assert.ok(userIds.includes(blogUser.toString()))
+
+    const targetUser = users.find(u => u.id === blogUser.toString())
+    assert.ok(targetUser.blogs.map(b => b.toString()).includes(blogId))
   })
 
   test('a blog post can be added even if \'likes\' is missing (0 will be set)', async () => {
@@ -65,6 +89,7 @@ describe('when there is initially some blogs saved', () => {
 
     await api
       .post('/api/blogs')
+      .auth(token, { type: 'bearer' })
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -73,7 +98,7 @@ describe('when there is initially some blogs saved', () => {
     assert.strictEqual(blogs.length, helper.initialBlogs.length + 1)
 
     // eslint-disable-next-line no-unused-vars
-    const { id: _, likes: savedLikes, ...targetBlogNoId } = blogs.find(b => b.title === newBlog.title)
+    const { id: _, likes: savedLikes, user, ...targetBlogNoId } = blogs.find(b => b.title === newBlog.title)
     assert.deepStrictEqual(targetBlogNoId, newBlog)
     assert.deepStrictEqual(savedLikes, 0)
   })
@@ -87,6 +112,7 @@ describe('when there is initially some blogs saved', () => {
 
     await api
       .post('/api/blogs')
+      .auth(token, { type: 'bearer' })
       .send(missingTitle)
       .expect(400)
 
@@ -103,6 +129,7 @@ describe('when there is initially some blogs saved', () => {
 
     await api
       .post('/api/blogs')
+      .auth(token, { type: 'bearer' })
       .send(missingUrl)
       .expect(400)
 
@@ -118,8 +145,26 @@ describe('when there is initially some blogs saved', () => {
 
     await api
       .post('/api/blogs')
+      .auth(token, { type: 'bearer' })
       .send(missingReq)
       .expect(400)
+
+    const blogs = await helper.blogsInDb()
+    assert.strictEqual(blogs.length, helper.initialBlogs.length)
+  })
+
+  test('a blog post cannot be added if token is not provided', async () => {
+    const newBlog = {
+      title: 'Canonical string reduction',
+      author: 'Edsger W. Dijkstra',
+      url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html',
+      likes: 12
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(401)
 
     const blogs = await helper.blogsInDb()
     assert.strictEqual(blogs.length, helper.initialBlogs.length)
@@ -129,14 +174,70 @@ describe('when there is initially some blogs saved', () => {
     const blogs = await helper.blogsInDb()
     const blogToDelete = blogs[0]
 
-    await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .auth(token, { type: 'bearer' })
+      .expect(204)
 
     const blogsAfterDelete = await helper.blogsInDb()
 
     const ids = blogsAfterDelete.map(n => n.id)
-    assert(!ids.includes(blogsAfterDelete.id))
+    assert(!ids.includes(blogToDelete.id))
 
     assert.strictEqual(blogsAfterDelete.length, helper.initialBlogs.length - 1)
+
+    const users = await helper.usersInDb()
+    const targetUser = users.find(u => u.id === blogToDelete.user.toString())
+    assert.ok(!targetUser.blogs.map(b => b.toString()).includes(blogToDelete.id))
+  })
+
+  test('a blog post can only be deleted by the user who added it', async () => {
+    const blogs = await helper.blogsInDb()
+    const blogToDelete = blogs[0]
+
+    const passwordHash = await bcrypt.hash('sekret', 10)
+    const otherUser = new User({ username: 'another', passwordHash })
+    await otherUser.save()
+
+    const response = await api.post('/api/login')
+      .send({ username: 'another', password: 'sekret' })
+    const otherToken = response.body.token
+
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .auth(otherToken, { type: 'bearer' })
+      .expect(403)
+
+    const blogsAfterDelete = await helper.blogsInDb()
+
+    const ids = blogsAfterDelete.map(n => n.id)
+    assert(ids.includes(blogToDelete.id))
+
+    assert.strictEqual(blogsAfterDelete.length, helper.initialBlogs.length)
+
+    const users = await helper.usersInDb()
+    const targetUser = users.find(u => u.id === blogToDelete.user.toString())
+    assert.ok(targetUser.blogs.map(b => b.toString()).includes(blogToDelete.id))
+  })
+
+  test('a blog post cannot be deleted if token is not provided', async () => {
+    const blogs = await helper.blogsInDb()
+    const blogToDelete = blogs[0]
+
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .expect(401)
+
+    const blogsAfterDelete = await helper.blogsInDb()
+
+    const ids = blogsAfterDelete.map(n => n.id)
+    assert(ids.includes(blogToDelete.id))
+
+    assert.strictEqual(blogsAfterDelete.length, helper.initialBlogs.length)
+
+    const users = await helper.usersInDb()
+    const targetUser = users.find(u => u.id === blogToDelete.user.toString())
+    assert.ok(targetUser.blogs.map(b => b.toString()).includes(blogToDelete.id))
   })
 
   test('a blog post can be updated', async () => {
