@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Blog from './components/Blog'
+import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
 
@@ -11,6 +12,7 @@ const App = () => {
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [url, setUrl] = useState('')
+  const [newMessage, setNewMessage] = useState(null)
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
@@ -26,6 +28,17 @@ const App = () => {
       blogService.setToken(user.token)
     }
   }, [])
+
+  const displayNotification = (message, isError) => {
+    setNewMessage({
+      content: message,
+      isError: isError
+    })
+
+    setTimeout(() => {
+      setNewMessage(null)
+    }, 5000)
+  }
 
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogAppUser')
@@ -45,7 +58,7 @@ const App = () => {
       setUsername('')
       setPassword('')
     } catch {
-      console.log('wrong credentials')
+      displayNotification(`wrong username or password`, true)
     }
   }
 
@@ -53,6 +66,7 @@ const App = () => {
     <form onSubmit={handleLogin}>
       <div>
         <h2>log in to application</h2>
+        <Notification message={newMessage} />
         <label>
           username
           <input
@@ -89,6 +103,7 @@ const App = () => {
     setTitle('')
     setAuthor('')
     setUrl('')
+    displayNotification(`a new blog ${blog.title} by ${blog.author} added`, false)
   }
 
   const blogForm = () => (
@@ -132,6 +147,7 @@ const App = () => {
         <div>
           <div>
             <h2>blogs</h2>
+            <Notification message={newMessage} />
             <p>{user.name} logged in<button onClick={handleLogout}>logout</button></p>
             {blogForm()}
             {blogs.map(blog =>
