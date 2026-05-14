@@ -97,6 +97,11 @@ const App = () => {
     displayNotification(`a new blog ${blog.title} by ${blog.author} added`, false)
   }
 
+  const updateBlog = async (id, blogObject) => {
+    const updatedBlog = await blogService.update(id, blogObject)
+    setBlogs(blogs.map(blog => blog.id === id ? updatedBlog : blog))
+  }
+
   const blogForm = () => (
     <Togglable buttonLabel="create new blog" ref={blogFormRef}>
       <BlogForm createBlog={createBlog} />
@@ -114,7 +119,7 @@ const App = () => {
             <p>{user.name} logged in<button onClick={handleLogout}>logout</button></p>
             {blogForm()}
             {blogs.map(blog =>
-              <Blog key={blog.id} blog={blog} />
+              <Blog key={blog.id} blog={blog} updateBlog={updateBlog}/>
             )}
           </div>
         </div>
