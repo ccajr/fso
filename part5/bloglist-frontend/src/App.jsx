@@ -16,7 +16,7 @@ const App = () => {
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
-      setBlogs( blogs )
+      setBlogs( blogs.sort((a, b) => b.likes - a.likes) )
     )
   }, [])
 
@@ -99,7 +99,14 @@ const App = () => {
 
   const updateBlog = async (id, blogObject) => {
     const updatedBlog = await blogService.update(id, blogObject)
-    setBlogs(blogs.map(blog => blog.id === id ? updatedBlog : blog))
+    setBlogs(blogs
+      .map(blog => blog.id === id ? updatedBlog : blog)
+      .sort((a, b) => b.likes - a.likes))
+  }
+
+  const deleteBlog = async id => {
+    await blogService.remove(id)
+    setBlogs(blogs.filter(blog => blog.id !== id))
   }
 
   const blogForm = () => (
@@ -119,7 +126,7 @@ const App = () => {
             <p>{user.name} logged in<button onClick={handleLogout}>logout</button></p>
             {blogForm()}
             {blogs.map(blog =>
-              <Blog key={blog.id} blog={blog} updateBlog={updateBlog}/>
+              <Blog key={blog.id} blog={blog} updateBlog={updateBlog} canDelete={blog.user.username === user.username} deleteBlog={deleteBlog} />
             )}
           </div>
         </div>
