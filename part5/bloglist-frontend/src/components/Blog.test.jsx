@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import Blog from './Blog'
 
 const blog = {
@@ -28,5 +29,21 @@ describe('<Blog />', () => {
 
     const url = container.querySelector('.url')
     expect(url).toBeNull()
+  })
+
+  test('shows the blog\'s URL and number of likes when the button controlling the shown details has been clicked', async () => {
+    const { container } = render(
+      <Blog blog={blog} />
+    )
+
+    const user = userEvent.setup()
+    const viewButton = screen.getByText('view')
+    await user.click(viewButton)
+
+    const likes = screen.queryByText(`likes ${blog.likes}`)
+    expect(likes).toBeVisible()
+
+    const url = container.querySelector('.url')
+    expect(url).toBeVisible()
   })
 })
