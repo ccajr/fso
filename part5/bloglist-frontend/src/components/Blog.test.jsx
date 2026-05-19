@@ -46,4 +46,21 @@ describe('<Blog />', () => {
     const url = container.querySelector('.url')
     expect(url).toBeVisible()
   })
+
+  test('after clicking like button twice, the event handler the component received as props is called twice', async () => {
+    const updateBlog = vi.fn()
+    render(
+      <Blog blog={blog} updateBlog={updateBlog} />
+    )
+
+    const user = userEvent.setup()
+    const viewButton = screen.getByText('view')
+    await user.click(viewButton)
+
+    const likeButton = screen.getByText('like')
+    await user.click(likeButton)
+    await user.click(likeButton)
+
+    expect(updateBlog.mock.calls).toHaveLength(2)
+  })
 })
