@@ -9,7 +9,6 @@ const Blog = ({ blog, updateBlog, canDelete, deleteBlog }) => {
   }
   const [visible, setVisible] = useState(false)
 
-  const showWhenVisible = { display: visible ? '' : 'none' }
   const showWhenCanDelete = { display: canDelete ? '' : 'none' }
 
   const toggleVisibility = () => {
@@ -37,12 +36,14 @@ const Blog = ({ blog, updateBlog, canDelete, deleteBlog }) => {
       <div>
         {blog.title} {blog.author}
         <button onClick={toggleVisibility}>{visible ? 'hide' : 'view'}</button>
-        <div style={showWhenVisible}>
-          <div>{blog.url}</div>
-          <div>likes {blog.likes}<button onClick={handleLike}>like</button></div>
-          <div>{blog.user.name}</div>
-          <button onClick={handleRemove} style={showWhenCanDelete}>remove</button>
-        </div>
+        {visible && (
+          <div>
+            <div className='url'>{blog.url}</div>
+            <div>likes {blog.likes}<button onClick={handleLike}>like</button></div>
+            <div>{blog.user.name}</div>
+            <button onClick={handleRemove} style={showWhenCanDelete}>remove</button>
+          </div>
+        )}
       </div>
     </div>
   )
