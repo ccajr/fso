@@ -48,5 +48,29 @@ describe('Blog app', () => {
       await createBlog(page, 'Testing Blog API', 'Mark Markkanen', 'https://testurl.com/')
       await expect(page.getByText('Testing Blog API Mark Markkanen')).toBeVisible()
     })
+
+    describe('and several blogs exists', () => {
+      beforeEach(async ({ page, request }) => {
+        await createBlog(page, 'Existing Blog', 'Mark Markkanen', 'https://testurl.com/')
+        await request.post('/api/users', {
+          data: {
+            name: 'Other User',
+            username: 'otheruser',
+            password: 'secret'
+          }
+        })
+        await page.getByRole('button', { name: 'logout' }).click()
+        await loginWith(page, 'otheruser', 'secret')
+        await createBlog(page, 'Some Other Blog', 'Another Person', 'https://othertesturl.com/')
+      })
+
+      test('a blog can be liked', async ({ page }) => {
+        const firstBlog = page.getByText('Existing Blog Mark Markkanen')
+        await firstBlog.getByRole('button', { name: 'view' }).click()
+        await expect(firstBlog.getByText('likes 0')).toBeVisible()
+        await firstBlog.getByRole('button', { name: 'like' }).click()
+        await expect(firstBlog.getByText('likes 1')).toBeVisible()
+      })
+    })
   })
 })
