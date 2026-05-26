@@ -71,6 +71,14 @@ describe('Blog app', () => {
         await firstBlog.getByRole('button', { name: 'like' }).click()
         await expect(firstBlog.getByText('likes 1')).toBeVisible()
       })
+
+      test('a blog can only be deleted by the user who added it', async ({ page }) => {
+        const createdBlog = page.getByText('Some Other Blog Another Person')
+        await createdBlog.getByRole('button', { name: 'view' }).click()
+        page.on('dialog', dialog => dialog.accept())
+        await createdBlog.getByRole('button', { name: 'remove' }).click()
+        await expect(page.getByText('Some Other Blog Another Person')).not.toBeVisible()
+      })
     })
   })
 })
