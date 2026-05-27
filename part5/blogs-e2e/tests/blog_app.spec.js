@@ -85,6 +85,34 @@ describe('Blog app', () => {
         await otherBlog.getByRole('button', { name: 'view' }).click()
         await expect(otherBlog.getByRole('button', { name: 'remove' })).not.toBeVisible()
       })
+
+      test('blogs are displayed in descending order of likes', async ({ page }) => {
+        await createBlog(page, 'Third Blog', 'Third Person', 'https://thirdtesturl.com/')
+        const blog1 = page.getByText('Existing Blog Mark Markkanen')
+        const blog2 = page.getByText('Some Other Blog Another Person')
+        const blog3 = page.getByText('Third Blog Third Person')
+
+        await blog1.getByRole('button', { name: 'view' }).click()
+        await blog2.getByRole('button', { name: 'view' }).click()
+        await blog3.getByRole('button', { name: 'view' }).click()
+
+        // Expect blog2 to be displayed at the top
+        await blog2.getByRole('button', { name: 'like' }).click()
+        await expect(blog2.getByText('likes 1')).toBeVisible()
+        await expect(page.getByRole('button', { name: 'like' }).first().locator('..').getByText('likes 1')).toBeVisible()
+        await expect(page.getByRole('button', { name: 'like' }).nth(1).locator('..').getByText('likes 0')).toBeVisible()
+        await expect(page.getByRole('button', { name: 'like' }).nth(2).locator('..').getByText('likes 0')).toBeVisible()
+
+        // Expect blog3 to be displayed at the top, followed by blog2 and blog1
+        await blog3.getByRole('button', { name: 'like' }).click()
+        await blog3.getByText('likes 1').waitFor()
+        await blog3.getByRole('button', { name: 'like' }).click()
+        await expect(blog3.getByText('likes 2')).toBeVisible()
+        await expect(blog1.getByText('likes 0')).toBeVisible()
+        await expect(page.getByRole('button', { name: 'like' }).first().locator('..').getByText('likes 2')).toBeVisible()
+        await expect(page.getByRole('button', { name: 'like' }).nth(1).locator('..').getByText('likes 1')).toBeVisible()
+        await expect(page.getByRole('button', { name: 'like' }).nth(2).locator('..').getByText('likes 0')).toBeVisible()
+      })
     })
   })
 })
