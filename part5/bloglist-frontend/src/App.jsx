@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
+import {
+  Routes, Route, Link, useNavigate
+} from 'react-router-dom'
 import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
+import BlogList from './components/BlogList'
 import Notification from './components/Notification'
-import Togglable from './components/Togglable'
 import blogService from './services/blogs'
 import loginService from './services/login'
 
@@ -13,6 +16,7 @@ const App = () => {
   const [user, setUser] = useState(null)
   const [newMessage, setNewMessage] = useState(null)
   const blogFormRef = useRef()
+  const navigate = useNavigate()
 
   useEffect(() => {
     blogService.getAll().then(blogs =>
@@ -55,6 +59,7 @@ const App = () => {
       window.localStorage.setItem('loggedBlogAppUser', JSON.stringify(user))
       blogService.setToken(user.token)
       setUser(user)
+      navigate('/')
       setUsername('')
       setPassword('')
     } catch {
@@ -115,22 +120,28 @@ const App = () => {
     </Togglable>
   )
 
+  const padding = {
+    padding: 5
+  }
+
   return (
     <div>
-      {!user && loginForm()}
-      {user && (
-        <div>
-          <div>
-            <h2>blogs</h2>
-            <Notification message={newMessage} />
-            <p>{user.name} logged in<button onClick={handleLogout}>logout</button></p>
-            {blogForm()}
-            {blogs.map(blog =>
-              <Blog key={blog.id} blog={blog} updateBlog={updateBlog} canDelete={blog.user.username === user.username} deleteBlog={deleteBlog} />
-            )}
-          </div>
-        </div>
-      )}
+      <div>
+        <Link style={padding} to="/">blogs</Link>
+        {!user && (
+          <Link style={padding} to="/login">login</Link>
+        )}
+        {user && (
+          <button onClick={handleLogout}>logout</button>
+        )}
+      </div>
+
+      <Routes>
+        <Route path="/" element={
+          <BlogList blogs={blogs} />
+        } />
+        <Route path="/login" element={loginForm()} />
+      </Routes>
     </div>
   )
 }
