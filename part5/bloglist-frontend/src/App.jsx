@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import {
-  Routes, Route, Link, useNavigate
+  Routes, Route, Link, useNavigate, useMatch
 } from 'react-router-dom'
 import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
@@ -112,6 +112,7 @@ const App = () => {
   const deleteBlog = async id => {
     await blogService.remove(id)
     setBlogs(blogs.filter(blog => blog.id !== id))
+    navigate('/')
   }
 
   const blogForm = () => (
@@ -123,6 +124,11 @@ const App = () => {
   const padding = {
     padding: 5
   }
+
+  const match = useMatch('/blogs/:id')
+  const blog = match
+    ? blogs.find(blog => blog.id === match.params.id)
+    : null
 
   return (
     <div>
@@ -139,6 +145,9 @@ const App = () => {
       <Routes>
         <Route path="/" element={
           <BlogList blogs={blogs} />
+        } />
+        <Route path="/blogs/:id" element={
+          <Blog blog={blog} updateBlog={user ? updateBlog : undefined} canDelete={user && blog?.user?.username === user.username} deleteBlog={deleteBlog} />
         } />
         <Route path="/login" element={loginForm()} />
       </Routes>

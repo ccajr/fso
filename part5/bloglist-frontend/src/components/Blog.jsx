@@ -1,19 +1,9 @@
-import { useState } from 'react'
 const Blog = ({ blog, updateBlog, canDelete, deleteBlog }) => {
-  const blogStyle = {
-    paddingTop: 10,
-    paddingLeft: 2,
-    border: 'solid',
-    borderWidth: 1,
-    marginBottom: 5
+  if (!blog) {
+    return null
   }
-  const [visible, setVisible] = useState(false)
 
   const showWhenCanDelete = { display: canDelete ? '' : 'none' }
-
-  const toggleVisibility = () => {
-    setVisible(!visible)
-  }
 
   const handleLike = () => {
     updateBlog(blog.id, {
@@ -32,18 +22,15 @@ const Blog = ({ blog, updateBlog, canDelete, deleteBlog }) => {
   }
 
   return (
-    <div style={blogStyle}>
+    <div>
+      <h2>{blog.author}: {blog.title}</h2>
       <div>
-        {blog.title} {blog.author}
-        <button onClick={toggleVisibility}>{visible ? 'hide' : 'view'}</button>
-        {visible && (
-          <div>
-            <div className='url'>{blog.url}</div>
-            <div>likes {blog.likes}<button onClick={handleLike}>like</button></div>
-            <div>{blog.user.name}</div>
-            <button onClick={handleRemove} style={showWhenCanDelete}>remove</button>
-          </div>
-        )}
+        <a className='url' target="_blank" href={blog.url}>{blog.url}</a>
+        <div>likes {blog.likes}{updateBlog && (
+          <button onClick={handleLike}>like</button>
+        )} </div>
+        <div>Added by {blog.user.name}</div>
+        <button onClick={handleRemove} style={showWhenCanDelete}>remove</button>
       </div>
     </div>
   )
