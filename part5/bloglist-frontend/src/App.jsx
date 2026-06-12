@@ -4,7 +4,6 @@ import {
 } from 'react-router-dom'
 import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
-import BlogList from './components/BlogList'
 import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
@@ -146,7 +145,16 @@ const App = () => {
 
       <Routes>
         <Route path="/" element={
-          <BlogList blogs={blogs} />
+          <div>
+            <h2>blogs</h2>
+            <ul>
+              {blogs.map(blog =>
+                <li key={blog.id}>
+                  <Link to={`/blogs/${blog.id}`}>{blog.title} {blog.author}</Link>
+                </li>
+              )}
+            </ul>
+          </div>
         } />
         <Route path="/blogs/:id" element={
           <Blog blog={blog} updateBlog={user ? updateBlog : undefined} canDelete={user && blog?.user?.username === user.username} deleteBlog={deleteBlog} />
