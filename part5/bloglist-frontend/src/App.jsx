@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Routes, Route, Link, useNavigate, useMatch
 } from 'react-router-dom'
@@ -15,7 +15,6 @@ const App = () => {
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
   const [newMessage, setNewMessage] = useState(null)
-  const blogFormRef = useRef()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -96,10 +95,14 @@ const App = () => {
   )
 
   const createBlog = async blogObject => {
-    blogFormRef.current.toggleVisibility()
-    const blog = await blogService.create(blogObject)
-    setBlogs(blogs.concat(blog))
-    displayNotification(`a new blog ${blog.title} by ${blog.author} added`, false)
+    try {
+      const blog = await blogService.create(blogObject)
+      setBlogs(blogs.concat(blog))
+      navigate('/')
+      displayNotification(`a new blog ${blog.title} by ${blog.author} added`, false)
+    } catch (error) {
+      displayNotification(error?.response?.data?.error || error.message, true)
+    }
   }
 
   const updateBlog = async (id, blogObject) => {
@@ -114,12 +117,6 @@ const App = () => {
     setBlogs(blogs.filter(blog => blog.id !== id))
     navigate('/')
   }
-
-  const blogForm = () => (
-    <Togglable buttonLabel="create new blog" ref={blogFormRef}>
-      <BlogForm createBlog={createBlog} />
-    </Togglable>
-  )
 
   const padding = {
     padding: 5
@@ -138,9 +135,14 @@ const App = () => {
           <Link style={padding} to="/login">login</Link>
         )}
         {user && (
-          <button onClick={handleLogout}>logout</button>
+          <>
+            <Link style={padding} to="/create">new blog</Link>
+            <button onClick={handleLogout}>logout</button>
+          </>
         )}
       </div>
+      <br />
+      <Notification message={newMessage} />
 
       <Routes>
         <Route path="/" element={
@@ -149,7 +151,10 @@ const App = () => {
         <Route path="/blogs/:id" element={
           <Blog blog={blog} updateBlog={user ? updateBlog : undefined} canDelete={user && blog?.user?.username === user.username} deleteBlog={deleteBlog} />
         } />
-        <Route path="/login" element={loginForm()} />
+        <Route path="/create" element={
+          user && <BlogForm createBlog={createBlog} />
+        } />
+        <Route path="/login" element={!user && loginForm()} />
       </Routes>
     </div>
   )
