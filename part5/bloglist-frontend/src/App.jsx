@@ -69,7 +69,6 @@ const App = () => {
     <form onSubmit={handleLogin}>
       <div>
         <h2>log in to application</h2>
-        <Notification message={newMessage} />
         <label>
           username
           <input
@@ -157,7 +156,7 @@ const App = () => {
           </div>
         } />
         <Route path="/blogs/:id" element={
-          <Blog blog={blog} updateBlog={user ? updateBlog : undefined} canDelete={user && blog?.user?.username === user.username} deleteBlog={deleteBlog} />
+          <Blog blog={blog} user={user} updateBlog={updateBlog} deleteBlog={deleteBlog} />
         } />
         <Route path="/create" element={
           user && <BlogForm createBlog={createBlog} />

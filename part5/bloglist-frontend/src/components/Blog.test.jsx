@@ -16,48 +16,83 @@ const blog = {
 }
 
 describe('<Blog />', () => {
-  test('renders the blog\'s title and author but not the URL and number of likes', () => {
+  test('renders the blog\'s information to unauthenticated users, buttons are not displayed', () => {
     const { container } = render(
       <Blog blog={blog} />
     )
 
-    const titleAndAuthor = screen.getByText(`${blog.title} ${blog.author}`)
+    const titleAndAuthor = screen.getByText(`${blog.author}: ${blog.title}`)
     expect(titleAndAuthor).toBeVisible()
-
-    const likes = screen.queryByText(`likes ${blog.likes}`)
-    expect(likes).toBeNull()
-
-    const url = container.querySelector('.url')
-    expect(url).toBeNull()
-  })
-
-  test('shows the blog\'s URL and number of likes when the button controlling the shown details has been clicked', async () => {
-    const { container } = render(
-      <Blog blog={blog} />
-    )
-
-    const user = userEvent.setup()
-    const viewButton = screen.getByText('view')
-    await user.click(viewButton)
 
     const likes = screen.queryByText(`likes ${blog.likes}`)
     expect(likes).toBeVisible()
 
     const url = container.querySelector('.url')
     expect(url).toBeVisible()
+
+    const like = screen.queryByRole('button', { name: 'like' })
+    expect(like).toBeNull()
+
+    const remove = screen.queryByRole('button', { name: 'remove' })
+    expect(remove).toBeNull()
+  })
+
+  test('shows the blog\'s information and like button to authenticated users who are not the blog\'s creator', async () => {
+    const newUser = {
+      username: 'newuser',
+      name: 'New User',
+      id: '6a05808c6787740493d742fa'
+    }
+
+    const { container } = render(
+      <Blog blog={blog} user={newUser} />
+    )
+
+    const titleAndAuthor = screen.getByText(`${blog.author}: ${blog.title}`)
+    expect(titleAndAuthor).toBeVisible()
+
+    const likes = screen.queryByText(`likes ${blog.likes}`)
+    expect(likes).toBeVisible()
+
+    const url = container.querySelector('.url')
+    expect(url).toBeVisible()
+
+    const like = screen.queryByRole('button', { name: 'like' })
+    expect(like).toBeVisible()
+
+    const remove = screen.queryByRole('button', { name: 'remove' })
+    expect(remove).toBeNull()
+  })
+
+  test('shows the blog\'s information, like, and remove buttons to the blog\'s creator', async () => {
+    const { container } = render(
+      <Blog blog={blog} user={blog.user} />
+    )
+
+    const titleAndAuthor = screen.getByText(`${blog.author}: ${blog.title}`)
+    expect(titleAndAuthor).toBeVisible()
+
+    const likes = screen.queryByText(`likes ${blog.likes}`)
+    expect(likes).toBeVisible()
+
+    const url = container.querySelector('.url')
+    expect(url).toBeVisible()
+
+    const like = screen.queryByRole('button', { name: 'like' })
+    expect(like).toBeVisible()
+
+    const remove = screen.queryByRole('button', { name: 'remove' })
+    expect(remove).toBeVisible()
   })
 
   test('after clicking like button twice, the event handler the component received as props is called twice', async () => {
     const updateBlog = vi.fn()
     render(
-      <Blog blog={blog} updateBlog={updateBlog} />
+      <Blog blog={blog} updateBlog={updateBlog} user={blog.user} />
     )
 
     const user = userEvent.setup()
-    const viewButton = screen.getByText('view')
-    await user.click(viewButton)
-
-    const likeButton = screen.getByText('like')
+    const likeButton = screen.queryByRole('button', { name: 'like' })
     await user.click(likeButton)
     await user.click(likeButton)
 

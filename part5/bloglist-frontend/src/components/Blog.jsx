@@ -1,9 +1,9 @@
-const Blog = ({ blog, updateBlog, canDelete, deleteBlog }) => {
+const Blog = ({ blog, updateBlog, user, deleteBlog }) => {
   if (!blog) {
     return null
   }
 
-  const showWhenCanDelete = { display: canDelete ? '' : 'none' }
+  const isCreator = user && blog.user.username === user.username
 
   const handleLike = () => {
     updateBlog(blog.id, {
@@ -26,11 +26,12 @@ const Blog = ({ blog, updateBlog, canDelete, deleteBlog }) => {
       <h2>{blog.author}: {blog.title}</h2>
       <div>
         <a className='url' target="_blank" href={blog.url}>{blog.url}</a>
-        <div>likes {blog.likes}{updateBlog && (
-          <button onClick={handleLike}>like</button>
-        )} </div>
+        <div>
+          likes {blog.likes}
+          {user && <button onClick={handleLike}>like</button>}
+        </div>
         <div>Added by {blog.user.name}</div>
-        <button onClick={handleRemove} style={showWhenCanDelete}>remove</button>
+        {isCreator && <button onClick={handleRemove}>remove</button>}
       </div>
     </div>
   )
