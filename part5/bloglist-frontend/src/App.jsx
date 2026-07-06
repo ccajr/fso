@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   Routes, Route, Link, useNavigate, useMatch
 } from 'react-router-dom'
+import { Container, TextField, Button } from '@mui/material'
 import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
 import Notification from './components/Notification'
@@ -69,26 +70,24 @@ const App = () => {
     <form onSubmit={handleLogin}>
       <div>
         <h2>log in to application</h2>
-        <label>
-          username
-          <input
-            type="text"
-            value={username}
-            onChange={({ target }) => setUsername(target.value)}
-          />
-        </label>
+        <TextField
+          label='username'
+          type="text"
+          value={username}
+          onChange={({ target }) => setUsername(target.value)}
+          variant='standard'
+        />
       </div>
       <div>
-        <label>
-          password
-          <input
-            type="password"
-            value={password}
-            onChange={({ target }) => setPassword(target.value)}
-          />
-        </label>
+        <TextField
+          label='password'
+          type="password"
+          value={password}
+          onChange={({ target }) => setPassword(target.value)}
+          variant='standard'
+        />
       </div>
-      <button type="submit">login</button>
+      <Button type="submit" variant="contained" style={{ marginTop: 10 }}>login</Button>
     </form>
   )
 
@@ -126,7 +125,7 @@ const App = () => {
     : null
 
   return (
-    <div>
+    <Container>
       <div>
         <Link style={padding} to="/">blogs</Link>
         {!user && (
@@ -163,7 +162,7 @@ const App = () => {
         } />
         <Route path="/login" element={!user && loginForm()} />
       </Routes>
-    </div>
+    </Container>
   )
 }
 
