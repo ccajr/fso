@@ -149,7 +149,7 @@ const App = () => {
             <ul>
               {blogs.map(blog =>
                 <li key={blog.id}>
-                  <Link to={`/blogs/${blog.id}`}>{blog.title} {blog.author}</Link>
+                  <Link to={`/blogs/${blog.id}`}>{blog.title} by {blog.author}</Link>
                 </li>
               )}
             </ul>

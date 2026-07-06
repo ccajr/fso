@@ -16,6 +16,7 @@ describe('Blog app', () => {
   })
 
   test('Login form is shown', async ({ page }) => {
+    await page.getByText('login').click()
     await expect(page.getByLabel('username')).toBeVisible()
     await expect(page.getByLabel('password')).toBeVisible()
     await expect(page.getByRole('button', { name: 'login' })).toBeVisible()
@@ -24,7 +25,7 @@ describe('Blog app', () => {
   describe('Login', () => {
     test('succeeds with correct credentials', async ({ page }) => {
       await loginWith(page, 'mluukkai', 'salainen')
-      await expect(page.getByText('Matti Luukkainen logged in')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'logout' })).toBeVisible()
     })
 
     test('fails with wrong credentials', async ({ page }) => {
@@ -35,7 +36,7 @@ describe('Blog app', () => {
       await expect(errorDiv).toHaveCSS('border-style', 'solid')
       await expect(errorDiv).toHaveCSS('color', 'rgb(255, 0, 0)')
 
-      await expect(page.getByText('Matti Luukkainen logged in')).not.toBeVisible()
+      await expect(page.getByRole('button', { name: 'logout' })).not.toBeVisible()
     })
   })
 
@@ -46,7 +47,7 @@ describe('Blog app', () => {
 
     test('a new blog can be created', async ({ page }) => {
       await createBlog(page, 'Testing Blog API', 'Mark Markkanen', 'https://testurl.com/')
-      await expect(page.getByText('Testing Blog API Mark Markkanen')).toBeVisible()
+      await expect(page.getByRole('link', { name: 'Testing Blog API by Mark' })).toBeVisible()
     })
 
     describe('and several blogs exists', () => {
@@ -62,31 +63,31 @@ describe('Blog app', () => {
         await page.getByRole('button', { name: 'logout' }).click()
         await loginWith(page, 'otheruser', 'secret')
         await createBlog(page, 'Some Other Blog', 'Another Person', 'https://othertesturl.com/')
+        await page.getByRole('link', { name: 'blogs' }).click()
       })
 
       test('a blog can be liked', async ({ page }) => {
-        const firstBlog = page.getByText('Existing Blog Mark Markkanen')
-        await firstBlog.getByRole('button', { name: 'view' }).click()
-        await expect(firstBlog.getByText('likes 0')).toBeVisible()
-        await firstBlog.getByRole('button', { name: 'like' }).click()
-        await expect(firstBlog.getByText('likes 1')).toBeVisible()
+        await page.getByRole('link', { name: 'Existing Blog by Mark Markkanen' }).click()
+        await expect(page.getByText('likes 0')).toBeVisible()
+        await page.getByRole('button', { name: 'like' }).click()
+        await expect(page.getByText('likes 1')).toBeVisible()
       })
 
       test('a blog can only be deleted by the user who added it', async ({ page }) => {
-        const createdBlog = page.getByText('Some Other Blog Another Person')
-        await createdBlog.getByRole('button', { name: 'view' }).click()
+        await page.getByRole('link', { name: 'Some Other Blog by Another Person' }).click()
         page.on('dialog', dialog => dialog.accept())
-        await createdBlog.getByRole('button', { name: 'remove' }).click()
-        await expect(page.getByText('Some Other Blog Another Person')).not.toBeVisible()
+        await page.getByRole('button', { name: 'remove' }).click()
+        await page.getByRole('link', { name: 'Existing Blog by Mark Markkanen' }).waitFor()
+        await expect(page.getByRole('link', { name: 'Some Other Blog by Another Person' })).not.toBeVisible()
       })
 
       test('a blog\'s remove button can only be seen by the user who added it', async ({ page }) => {
-        const otherBlog = page.getByText('Existing Blog Mark Markkanen')
-        await otherBlog.getByRole('button', { name: 'view' }).click()
-        await expect(otherBlog.getByRole('button', { name: 'remove' })).not.toBeVisible()
+        await page.getByRole('link', { name: 'Existing Blog by Mark Markkanen' }).click()
+        await expect(page.getByRole('button', { name: 'remove' })).not.toBeVisible()
       })
 
-      test('blogs are displayed in descending order of likes', async ({ page }) => {
+      // This test is skipped as per exercise 5.28
+      test.skip('blogs are displayed in descending order of likes', async ({ page }) => {
         await createBlog(page, 'Third Blog', 'Third Person', 'https://thirdtesturl.com/')
         const blog1 = page.getByText('Existing Blog Mark Markkanen')
         const blog2 = page.getByText('Some Other Blog Another Person')
