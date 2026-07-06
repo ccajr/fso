@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   Routes, Route, Link, useNavigate, useMatch
 } from 'react-router-dom'
-import { Container, TextField, Button } from '@mui/material'
+import { Container, AppBar, Button, TextField, Toolbar, Typography } from '@mui/material'
 import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
 import Notification from './components/Notification'
@@ -14,7 +14,7 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-  const [newMessage, setNewMessage] = useState(null)
+  const [notification, setNotification] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -32,14 +32,14 @@ const App = () => {
     }
   }, [])
 
-  const displayNotification = (message, isError) => {
-    setNewMessage({
-      content: message,
-      isError: isError
+  const displayNotification = (text, type) => {
+    setNotification({
+      text: text,
+      type: type
     })
 
     setTimeout(() => {
-      setNewMessage(null)
+      setNotification(null)
     }, 5000)
   }
 
@@ -62,14 +62,14 @@ const App = () => {
       setUsername('')
       setPassword('')
     } catch {
-      displayNotification('wrong username or password', true)
+      displayNotification('wrong username or password', 'error')
     }
   }
 
   const loginForm = () => (
     <form onSubmit={handleLogin}>
       <div>
-        <h2>log in to application</h2>
+        <h2>Log in to application</h2>
         <TextField
           label='username'
           type="text"
@@ -96,9 +96,9 @@ const App = () => {
       const blog = await blogService.create(blogObject)
       setBlogs(blogs.concat(blog))
       navigate('/')
-      displayNotification(`a new blog ${blog.title} by ${blog.author} added`, false)
+      displayNotification(`a new blog ${blog.title} by ${blog.author} added`, 'success')
     } catch (error) {
-      displayNotification(error?.response?.data?.error || error.message, true)
+      displayNotification(error?.response?.data?.error || error.message, 'error')
     }
   }
 
@@ -115,31 +115,34 @@ const App = () => {
     navigate('/')
   }
 
-  const padding = {
-    padding: 5
-  }
-
   const match = useMatch('/blogs/:id')
   const blog = match
     ? blogs.find(blog => blog.id === match.params.id)
     : null
 
+  const style = { '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }
+
   return (
     <Container>
-      <div>
-        <Link style={padding} to="/">blogs</Link>
-        {!user && (
-          <Link style={padding} to="/login">login</Link>
-        )}
-        {user && (
-          <>
-            <Link style={padding} to="/create">new blog</Link>
-            <button onClick={handleLogout}>logout</button>
-          </>
-        )}
-      </div>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            Blog App
+          </Typography>
+          <Button color="inherit" component={Link} to="/" sx={style}>blogs</Button>
+          {!user && (
+            <Button color="inherit" component={Link} to="/login" sx={style}>login</Button>
+          )}
+          {user && (
+            <>
+              <Button color="inherit" component={Link} to="/create" sx={style}>new blog</Button>
+              <Button color="inherit" onClick={handleLogout} sx={style}>logout</Button>
+            </>
+          )}
+        </Toolbar>
+      </AppBar>
       <br />
-      <Notification message={newMessage} />
+      <Notification notification={notification} />
 
       <Routes>
         <Route path="/" element={
