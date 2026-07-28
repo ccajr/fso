@@ -1,12 +1,15 @@
 import { useAnecdoteActions } from '../store'
+import { useNotificationActions } from '../notifStore'
 
 const AnecdoteForm = () => {
   const { add } = useAnecdoteActions()
+  const { displayNotification } = useNotificationActions()
 
   const addAnecdote = (e) => {
     e.preventDefault()
     const content = e.target.anecdote.value
     add(content)
+    displayNotification(`'${content}' added`)
     e.target.reset()
   }
 
