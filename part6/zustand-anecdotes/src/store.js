@@ -25,10 +25,12 @@ const useAnecdoteStore = create((set, get) => ({
     setFilter: value => set(() => ({ filter: value })),
     initialize: async () => {
       const anecdotes = await anecdoteService.getAll()
-      set(() => ({ anecdotes }))
+      set(() => ({ anecdotes: anecdotes.toSorted((a, b) => b.votes - a.votes) }))
     }
   },
 }))
+
+export default useAnecdoteStore
 
 export const useAnecdotes = () => {
   const anecdotes = useAnecdoteStore(state => state.anecdotes)
