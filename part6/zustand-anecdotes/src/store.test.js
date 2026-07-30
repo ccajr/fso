@@ -51,3 +51,29 @@ describe('useAnecdoteActions', () => {
     expect(anecdotesResult.current).toEqual(sortedMockAnecdotes)
   })
 })
+
+describe('useAnecdotes filtering', () => {
+  const anecdotes = [
+    { id: 1, content: 'This is a target anecdote', votes: 2 },
+    { id: 2, content: 'Not this', votes: 23 },
+    { id: 3, content: 'Not this one either', votes: 1 },
+    { id: 4, content: 'Also a target', votes: 8 },
+  ]
+
+  beforeEach(() => {
+    useAnecdoteStore.setState({ anecdotes })
+  })
+
+  it('returns all anecdotes with no filter', () => {
+    const { result } = renderHook(() => useAnecdotes())
+    expect(result.current).toHaveLength(4)
+  })
+
+  it(`filters 'target' anecdotes`, () => {
+    useAnecdoteStore.setState({ anecdotes, filter: 'target' })
+    const { result } = renderHook(() => useAnecdotes())
+    expect(result.current).toHaveLength(2)
+    expect(result.current[0]).toEqual(anecdotes[0])
+    expect(result.current[1]).toEqual(anecdotes[3])
+  })
+})
