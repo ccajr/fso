@@ -32,7 +32,13 @@ export const useAnecdotes = () => {
     anecdoteService.getAll().then(data => setAnecdotes(data))
   }, [])
 
+  const addAnecdote = async (anecdote) => {
+    const newAnecdote = await anecdoteService.createNew(anecdote)
+    setAnecdotes(anecdotes.concat(newAnecdote))
+  }
+
   return {
-    anecdotes
+    anecdotes,
+    addAnecdote,
   }
 }
