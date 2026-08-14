@@ -1,15 +1,22 @@
 import { useState } from 'react'
 import {
-  Button, Card, CardContent, CardActions, Typography,
-  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Link, Box
+  Button,
+  Card,
+  CardContent,
+  CardActions,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Link,
 } from '@mui/material'
 const Blog = ({ blog, updateBlog, user, deleteBlog }) => {
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   if (!blog) {
-    return (
-      <h2>404 - Page not found</h2>
-    )
+    return <h2>404 - Page not found</h2>
   }
 
   const isCreator = user && blog.user.username === user.username
@@ -20,7 +27,7 @@ const Blog = ({ blog, updateBlog, user, deleteBlog }) => {
       likes: blog.likes + 1,
       author: blog.author,
       title: blog.title,
-      url: blog.url
+      url: blog.url,
     })
   }
 
@@ -32,17 +39,46 @@ const Blog = ({ blog, updateBlog, user, deleteBlog }) => {
   return (
     <Card sx={{ mt: 2, maxWidth: 600 }}>
       <CardContent>
-        <Typography variant='h5' component='div'>{blog.title}</Typography>
-        <Typography variant='subtitle1' sx={{ color: 'text.secondary' }}>by {blog.author}</Typography>
-        <Link href={blog.url} target="_blank" rel="noopener" display="block" sx={{ mb: 1 }}>
+        <Typography variant='h5' component='div'>
+          {blog.title}
+        </Typography>
+        <Typography variant='subtitle1' sx={{ color: 'text.secondary' }}>
+          by {blog.author}
+        </Typography>
+        <Link
+          href={blog.url}
+          target='_blank'
+          rel='noopener'
+          display='block'
+          sx={{ mb: 1 }}
+        >
           {blog.url}
         </Link>
-        <Typography variant='body2' gutterBottom sx={{ color: 'text.secondary' }}>Added by {blog.user.name}</Typography>
+        <Typography
+          variant='body2'
+          gutterBottom
+          sx={{ color: 'text.secondary' }}
+        >
+          Added by {blog.user.name}
+        </Typography>
       </CardContent>
       <CardActions sx={{ marginLeft: 8 + 'px', marginTop: -16 + 'px' }}>
         <Typography variant='body1'>{blog.likes} likes</Typography>
-        {user && <Button variant='outlined' size='small' onClick={handleLike}>like</Button>}
-        {isCreator && <Button variant='outlined' size='small' color='error' onClick={() => setConfirmOpen(true)}>remove</Button>}
+        {user && (
+          <Button variant='outlined' size='small' onClick={handleLike}>
+            like
+          </Button>
+        )}
+        {isCreator && (
+          <Button
+            variant='outlined'
+            size='small'
+            color='error'
+            onClick={() => setConfirmOpen(true)}
+          >
+            remove
+          </Button>
+        )}
       </CardActions>
 
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
@@ -54,7 +90,9 @@ const Blog = ({ blog, updateBlog, user, deleteBlog }) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmOpen(false)}>cancel</Button>
-          <Button onClick={handleRemove} color="error" variant="contained">remove</Button>
+          <Button onClick={handleRemove} color='error' variant='contained'>
+            remove
+          </Button>
         </DialogActions>
       </Dialog>
     </Card>

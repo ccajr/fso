@@ -7,13 +7,12 @@ describe('<BlogForm />', () => {
     const createBlog = vi.fn()
     const user = userEvent.setup()
 
-    render(
-      <BlogForm createBlog={createBlog} />
-    )
+    render(<BlogForm createBlog={createBlog} />)
 
-    const titleVal = 'You\'re NOT gonna need it!'
+    const titleVal = "You're NOT gonna need it!"
     const authorVal = 'Ron Jeffries'
-    const urlVal = 'https://ronjeffries.com/xprog/articles/practices/pracnotneed'
+    const urlVal =
+      'https://ronjeffries.com/xprog/articles/practices/pracnotneed'
 
     const title = screen.getByLabelText('title:')
     const author = screen.getByLabelText('author:')

@@ -20,31 +20,39 @@ const BlogForm = ({ createBlog }) => {
       <div>
         <TextField
           label='title'
-          type="text"
+          type='text'
           value={title}
           onChange={({ target }) => setTitle(target.value)}
-          margin='dense' fullWidth size='small'
+          margin='dense'
+          fullWidth
+          size='small'
         />
       </div>
       <div>
         <TextField
           label='author'
-          type="text"
+          type='text'
           value={author}
           onChange={({ target }) => setAuthor(target.value)}
-          margin='dense' fullWidth size='small'
+          margin='dense'
+          fullWidth
+          size='small'
         />
       </div>
       <div>
         <TextField
           label='url'
-          type="text"
+          type='text'
           value={url}
           onChange={({ target }) => setUrl(target.value)}
-          margin='dense' fullWidth size='small'
+          margin='dense'
+          fullWidth
+          size='small'
         />
       </div>
-      <Button type="submit" variant='contained' style={{ marginTop: 10 }}>create</Button>
+      <Button type='submit' variant='contained' style={{ marginTop: 10 }}>
+        create
+      </Button>
     </form>
   )
 }

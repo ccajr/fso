@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react'
+import { Routes, Route, Link, useNavigate, useMatch } from 'react-router-dom'
 import {
-  Routes, Route, Link, useNavigate, useMatch
-} from 'react-router-dom'
-import { Container, AppBar, Button, TextField, Toolbar, Typography } from '@mui/material'
+  Container,
+  AppBar,
+  Button,
+  TextField,
+  Toolbar,
+  Typography,
+} from '@mui/material'
 import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
 import Notification from './components/Notification'
@@ -19,9 +24,9 @@ const App = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    blogService.getAll().then(blogs =>
-      setBlogs( blogs.sort((a, b) => b.likes - a.likes) )
-    )
+    blogService
+      .getAll()
+      .then((blogs) => setBlogs(blogs.sort((a, b) => b.likes - a.likes)))
   }, [])
 
   useEffect(() => {
@@ -36,7 +41,7 @@ const App = () => {
   const displayNotification = (text, type) => {
     setNotification({
       text: text,
-      type: type
+      type: type,
     })
 
     setTimeout(() => {
@@ -51,7 +56,7 @@ const App = () => {
     setUser(null)
   }
 
-  const handleLogin = async event => {
+  const handleLogin = async (event) => {
     event.preventDefault()
 
     try {
@@ -73,7 +78,7 @@ const App = () => {
         <h2>Log in to application</h2>
         <TextField
           label='username'
-          type="text"
+          type='text'
           value={username}
           onChange={({ target }) => setUsername(target.value)}
           variant='standard'
@@ -82,62 +87,78 @@ const App = () => {
       <div>
         <TextField
           label='password'
-          type="password"
+          type='password'
           value={password}
           onChange={({ target }) => setPassword(target.value)}
           variant='standard'
         />
       </div>
-      <Button type="submit" variant="contained" style={{ marginTop: 10 }}>login</Button>
+      <Button type='submit' variant='contained' style={{ marginTop: 10 }}>
+        login
+      </Button>
     </form>
   )
 
-  const createBlog = async blogObject => {
+  const createBlog = async (blogObject) => {
     try {
       const blog = await blogService.create(blogObject)
       setBlogs(blogs.concat(blog))
       navigate('/')
-      displayNotification(`a new blog ${blog.title} by ${blog.author} added`, 'success')
+      displayNotification(
+        `a new blog ${blog.title} by ${blog.author} added`,
+        'success',
+      )
     } catch (error) {
-      displayNotification(error?.response?.data?.error || error.message, 'error')
+      displayNotification(
+        error?.response?.data?.error || error.message,
+        'error',
+      )
     }
   }
 
   const updateBlog = async (id, blogObject) => {
     const updatedBlog = await blogService.update(id, blogObject)
-    setBlogs(blogs
-      .map(blog => blog.id === id ? updatedBlog : blog)
-      .sort((a, b) => b.likes - a.likes))
+    setBlogs(
+      blogs
+        .map((blog) => (blog.id === id ? updatedBlog : blog))
+        .sort((a, b) => b.likes - a.likes),
+    )
   }
 
-  const deleteBlog = async id => {
+  const deleteBlog = async (id) => {
     await blogService.remove(id)
-    setBlogs(blogs.filter(blog => blog.id !== id))
+    setBlogs(blogs.filter((blog) => blog.id !== id))
     navigate('/')
   }
 
   const match = useMatch('/blogs/:id')
-  const blog = match
-    ? blogs.find(blog => blog.id === match.params.id)
-    : null
+  const blog = match ? blogs.find((blog) => blog.id === match.params.id) : null
 
   const style = { '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }
 
   return (
     <Container>
-      <AppBar position="static">
+      <AppBar position='static'>
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant='h6' component='div' sx={{ flexGrow: 1 }}>
             Blog App
           </Typography>
-          <Button color="inherit" component={Link} to="/" sx={style}>blogs</Button>
+          <Button color='inherit' component={Link} to='/' sx={style}>
+            blogs
+          </Button>
           {!user && (
-            <Button color="inherit" component={Link} to="/login" sx={style}>login</Button>
+            <Button color='inherit' component={Link} to='/login' sx={style}>
+              login
+            </Button>
           )}
           {user && (
             <>
-              <Button color="inherit" component={Link} to="/create" sx={style}>new blog</Button>
-              <Button color="inherit" onClick={handleLogout} sx={style}>logout</Button>
+              <Button color='inherit' component={Link} to='/create' sx={style}>
+                new blog
+              </Button>
+              <Button color='inherit' onClick={handleLogout} sx={style}>
+                logout
+              </Button>
             </>
           )}
         </Toolbar>
@@ -147,28 +168,40 @@ const App = () => {
         <Notification notification={notification} />
 
         <Routes>
-          <Route path="/" element={
-            <div>
-              <h2>blogs</h2>
-              <ul>
-                {blogs.map(blog =>
-                  <li key={blog.id}>
-                    <Link to={`/blogs/${blog.id}`}>{blog.title} by {blog.author}</Link>
-                  </li>
-                )}
-              </ul>
-            </div>
-          } />
-          <Route path="/blogs/:id" element={
-            <Blog blog={blog} user={user} updateBlog={updateBlog} deleteBlog={deleteBlog} />
-          } />
-          <Route path="/create" element={
-            user && <BlogForm createBlog={createBlog} />
-          } />
-          <Route path="/login" element={!user && loginForm()} />
-          <Route path='*' element={
-            <h2>404 - Page not found</h2>
-          } />
+          <Route
+            path='/'
+            element={
+              <div>
+                <h2>blogs</h2>
+                <ul>
+                  {blogs.map((blog) => (
+                    <li key={blog.id}>
+                      <Link to={`/blogs/${blog.id}`}>
+                        {blog.title} by {blog.author}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            }
+          />
+          <Route
+            path='/blogs/:id'
+            element={
+              <Blog
+                blog={blog}
+                user={user}
+                updateBlog={updateBlog}
+                deleteBlog={deleteBlog}
+              />
+            }
+          />
+          <Route
+            path='/create'
+            element={user && <BlogForm createBlog={createBlog} />}
+          />
+          <Route path='/login' element={!user && loginForm()} />
+          <Route path='*' element={<h2>404 - Page not found</h2>} />
         </Routes>
       </ErrorBoundary>
     </Container>

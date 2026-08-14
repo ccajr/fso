@@ -2,18 +2,18 @@ const dummy = () => {
   return 1
 }
 
-const totalLikes = blogs => {
+const totalLikes = (blogs) => {
   return blogs.reduce((sum, blog) => sum + blog.likes, 0)
 }
 
-const favoriteBlog = blogs => {
+const favoriteBlog = (blogs) => {
   return blogs.reduce(
     (favorite, blog) => (favorite.likes > blog.likes ? favorite : blog),
-    {}
+    {},
   )
 }
 
-const mostBlogs = blogs => {
+const mostBlogs = (blogs) => {
   if (!blogs.length) {
     return null
   }
@@ -33,11 +33,11 @@ const mostBlogs = blogs => {
 
   return {
     author: maxAuthor,
-    blogs: blogsPerAuthor[maxAuthor]
+    blogs: blogsPerAuthor[maxAuthor],
   }
 }
 
-const mostLikes = blogs => {
+const mostLikes = (blogs) => {
   if (!blogs.length) {
     return null
   }
@@ -57,7 +57,7 @@ const mostLikes = blogs => {
 
   return {
     author: maxAuthor,
-    likes: likesPerAuthor[maxAuthor]
+    likes: likesPerAuthor[maxAuthor],
   }
 }
 
@@ -66,5 +66,5 @@ module.exports = {
   favoriteBlog,
   mostBlogs,
   mostLikes,
-  totalLikes
+  totalLikes,
 }
