@@ -6,6 +6,7 @@ import { Container, AppBar, Button, TextField, Toolbar, Typography } from '@mui/
 import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
 import Notification from './components/Notification'
+import ErrorBoundary from './components/ErrorBoundary'
 import blogService from './services/blogs'
 import loginService from './services/login'
 
@@ -142,29 +143,31 @@ const App = () => {
         </Toolbar>
       </AppBar>
       <br />
-      <Notification notification={notification} />
+      <ErrorBoundary>
+        <Notification notification={notification} />
 
-      <Routes>
-        <Route path="/" element={
-          <div>
-            <h2>blogs</h2>
-            <ul>
-              {blogs.map(blog =>
-                <li key={blog.id}>
-                  <Link to={`/blogs/${blog.id}`}>{blog.title} by {blog.author}</Link>
-                </li>
-              )}
-            </ul>
-          </div>
-        } />
-        <Route path="/blogs/:id" element={
-          <Blog blog={blog} user={user} updateBlog={updateBlog} deleteBlog={deleteBlog} />
-        } />
-        <Route path="/create" element={
-          user && <BlogForm createBlog={createBlog} />
-        } />
-        <Route path="/login" element={!user && loginForm()} />
-      </Routes>
+        <Routes>
+          <Route path="/" element={
+            <div>
+              <h2>blogs</h2>
+              <ul>
+                {blogs.map(blog =>
+                  <li key={blog.id}>
+                    <Link to={`/blogs/${blog.id}`}>{blog.title} by {blog.author}</Link>
+                  </li>
+                )}
+              </ul>
+            </div>
+          } />
+          <Route path="/blogs/:id" element={
+            <Blog blog={blog} user={user} updateBlog={updateBlog} deleteBlog={deleteBlog} />
+          } />
+          <Route path="/create" element={
+            user && <BlogForm createBlog={createBlog} />
+          } />
+          <Route path="/login" element={!user && loginForm()} />
+        </Routes>
+      </ErrorBoundary>
     </Container>
   )
 }
