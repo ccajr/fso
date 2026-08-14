@@ -166,6 +166,9 @@ const App = () => {
             user && <BlogForm createBlog={createBlog} />
           } />
           <Route path="/login" element={!user && loginForm()} />
+          <Route path='*' element={
+            <h2>404 - Page not found</h2>
+          } />
         </Routes>
       </ErrorBoundary>
     </Container>

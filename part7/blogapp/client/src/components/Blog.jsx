@@ -7,7 +7,9 @@ const Blog = ({ blog, updateBlog, user, deleteBlog }) => {
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   if (!blog) {
-    return null
+    return (
+      <h2>404 - Page not found</h2>
+    )
   }
 
   const isCreator = user && blog.user.username === user.username
