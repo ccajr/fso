@@ -23,7 +23,7 @@ const App = () => {
   const [user, setUser] = useState(null)
   const navigate = useNavigate()
   const { notify } = useNotification()
-  const { blogs, isPending, isError } = useBlogs()
+  const { blogs } = useBlogs()
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
@@ -84,22 +84,6 @@ const App = () => {
     </form>
   )
 
-  const updateBlog = async (id, blogObject) => {
-    const updatedBlog = await blogService.update(id, blogObject)
-    // setBlogs(
-    //   blogs
-    //     .map((blog) => (blog.id === id ? updatedBlog : blog))
-    //     .sort((a, b) => b.likes - a.likes),
-    // )
-  }
-
-  const deleteBlog = async (id) => {
-    await blogService.remove(id)
-    // setBlogs(blogs.filter((blog) => blog.id !== id))
-    notify(`blog ${blog.title} by ${blog.author} removed`, 'success')
-    navigate('/')
-  }
-
   const match = useMatch('/blogs/:id')
   const blog = match ? blogs.find((blog) => blog.id === match.params.id) : null
 
@@ -144,7 +128,7 @@ const App = () => {
                 <h2>blogs</h2>
                 <ul>
                   {blogs
-                    .toSorted((a, b) => b.likes - a.likes)
+                    ?.toSorted((a, b) => b.likes - a.likes)
                     .map((blog) => (
                       <li key={blog.id}>
                         <Link to={`/blogs/${blog.id}`}>
@@ -156,17 +140,7 @@ const App = () => {
               </div>
             }
           />
-          <Route
-            path='/blogs/:id'
-            element={
-              <Blog
-                blog={blog}
-                user={user}
-                updateBlog={updateBlog}
-                deleteBlog={deleteBlog}
-              />
-            }
-          />
+          <Route path='/blogs/:id' element={<Blog blog={blog} user={user} />} />
           <Route path='/create' element={user && <BlogForm />} />
           <Route path='/login' element={!user && loginForm()} />
           <Route path='*' element={<h2>404 - Page not found</h2>} />

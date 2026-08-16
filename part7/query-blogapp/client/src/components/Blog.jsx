@@ -12,8 +12,13 @@ import {
   DialogActions,
   Link,
 } from '@mui/material'
-const Blog = ({ blog, updateBlog, user, deleteBlog }) => {
+import { useNavigate } from 'react-router-dom'
+import { useBlogs } from '../hooks/useBlogs'
+
+const Blog = ({ blog, user }) => {
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const { like, removeBlog } = useBlogs()
+  const navigate = useNavigate()
 
   if (!blog) {
     return <h2>404 - Page not found</h2>
@@ -22,18 +27,13 @@ const Blog = ({ blog, updateBlog, user, deleteBlog }) => {
   const isCreator = user && blog.user.username === user.username
 
   const handleLike = () => {
-    updateBlog(blog.id, {
-      user: blog.user.id,
-      likes: blog.likes + 1,
-      author: blog.author,
-      title: blog.title,
-      url: blog.url,
-    })
+    like(blog)
   }
 
   const handleRemove = () => {
-    deleteBlog(blog.id)
+    removeBlog(blog)
     setConfirmOpen(false)
+    navigate('/')
   }
 
   return (

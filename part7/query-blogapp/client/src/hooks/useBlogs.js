@@ -27,10 +27,42 @@ export const useBlogs = () => {
     },
   })
 
+  const likeMutation = useMutation({
+    mutationFn: blogService.update,
+    onSuccess: (updatedBlog) => {
+      const blogs = queryClient.getQueryData(['blogs'])
+      queryClient.setQueryData(
+        ['blogs'],
+        blogs.map((b) => (updatedBlog.id === b.id ? updatedBlog : b)),
+      )
+      notify(
+        `blog ${updatedBlog.title} by ${updatedBlog.author} liked`,
+        'success',
+      )
+    },
+  })
+
+  const removeBlogMutation = useMutation({
+    mutationFn: blogService.remove,
+    onSuccess: (data, variables) => {
+      const blogs = queryClient.getQueryData(['blogs'])
+      queryClient.setQueryData(
+        ['blogs'],
+        blogs.filter((b) => variables.id !== b.id),
+      )
+      notify(
+        `blog ${variables.title} by ${variables.author} removed`,
+        'success',
+      )
+    },
+  })
+
   return {
     blogs: result.data,
     isPending: result.isPending,
     isError: result.isError,
     addBlog: (blog) => newBlogMutation.mutate(blog),
+    like: (blog) => likeMutation.mutate({ ...blog, likes: blog.likes + 1 }),
+    removeBlog: (blog) => removeBlogMutation.mutate(blog),
   }
 }
