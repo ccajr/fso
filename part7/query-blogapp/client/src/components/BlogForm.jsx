@@ -1,21 +1,26 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { TextField, Button } from '@mui/material'
+import { useBlogs } from '../hooks/useBlogs'
 
-const BlogForm = ({ createBlog }) => {
+const BlogForm = () => {
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [url, setUrl] = useState('')
+  const { addBlog } = useBlogs()
+  const navigate = useNavigate()
 
-  const addBlog = (event) => {
+  const handleAdd = (event) => {
     event.preventDefault()
-    createBlog({ title, author, url })
+    addBlog({ title, author, url })
     setTitle('')
     setAuthor('')
     setUrl('')
+    navigate('/')
   }
 
   return (
-    <form onSubmit={addBlog} style={{ width: 50 + 'ch' }}>
+    <form onSubmit={handleAdd} style={{ width: 50 + 'ch' }}>
       <h2>create new</h2>
       <div>
         <TextField

@@ -15,20 +15,15 @@ import ErrorBoundary from './components/ErrorBoundary'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import useNotification from './hooks/useNotification'
+import { useBlogs } from './hooks/useBlogs'
 
 const App = () => {
-  const [blogs, setBlogs] = useState([])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
   const navigate = useNavigate()
   const { notify } = useNotification()
-
-  useEffect(() => {
-    blogService
-      .getAll()
-      .then((blogs) => setBlogs(blogs.sort((a, b) => b.likes - a.likes)))
-  }, [])
+  const { blogs, isPending, isError } = useBlogs()
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
@@ -89,29 +84,18 @@ const App = () => {
     </form>
   )
 
-  const createBlog = async (blogObject) => {
-    try {
-      const blog = await blogService.create(blogObject)
-      setBlogs(blogs.concat(blog))
-      navigate('/')
-      notify(`a new blog ${blog.title} by ${blog.author} added`, 'success')
-    } catch (error) {
-      notify(error?.response?.data?.error || error.message, 'error')
-    }
-  }
-
   const updateBlog = async (id, blogObject) => {
     const updatedBlog = await blogService.update(id, blogObject)
-    setBlogs(
-      blogs
-        .map((blog) => (blog.id === id ? updatedBlog : blog))
-        .sort((a, b) => b.likes - a.likes),
-    )
+    // setBlogs(
+    //   blogs
+    //     .map((blog) => (blog.id === id ? updatedBlog : blog))
+    //     .sort((a, b) => b.likes - a.likes),
+    // )
   }
 
   const deleteBlog = async (id) => {
     await blogService.remove(id)
-    setBlogs(blogs.filter((blog) => blog.id !== id))
+    // setBlogs(blogs.filter((blog) => blog.id !== id))
     notify(`blog ${blog.title} by ${blog.author} removed`, 'success')
     navigate('/')
   }
@@ -159,13 +143,15 @@ const App = () => {
               <div>
                 <h2>blogs</h2>
                 <ul>
-                  {blogs.map((blog) => (
-                    <li key={blog.id}>
-                      <Link to={`/blogs/${blog.id}`}>
-                        {blog.title} by {blog.author}
-                      </Link>
-                    </li>
-                  ))}
+                  {blogs
+                    .toSorted((a, b) => b.likes - a.likes)
+                    .map((blog) => (
+                      <li key={blog.id}>
+                        <Link to={`/blogs/${blog.id}`}>
+                          {blog.title} by {blog.author}
+                        </Link>
+                      </li>
+                    ))}
                 </ul>
               </div>
             }
@@ -181,10 +167,7 @@ const App = () => {
               />
             }
           />
-          <Route
-            path='/create'
-            element={user && <BlogForm createBlog={createBlog} />}
-          />
+          <Route path='/create' element={user && <BlogForm />} />
           <Route path='/login' element={!user && loginForm()} />
           <Route path='*' element={<h2>404 - Page not found</h2>} />
         </Routes>
