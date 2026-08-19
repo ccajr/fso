@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import {
   Button,
   Card,
@@ -14,11 +14,13 @@ import {
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useBlogs } from '../hooks/useBlogs'
+import UserContext from '../UserContext'
 
-const Blog = ({ blog, user }) => {
+const Blog = ({ blog }) => {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const { like, removeBlog } = useBlogs()
   const navigate = useNavigate()
+  const { user } = useContext(UserContext)
 
   if (!blog) {
     return <h2>404 - Page not found</h2>

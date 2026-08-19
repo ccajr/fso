@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { Routes, Route, Link, useNavigate, useMatch } from 'react-router-dom'
 import {
   Container,
@@ -16,11 +16,12 @@ import blogService from './services/blogs'
 import loginService from './services/login'
 import useNotification from './hooks/useNotification'
 import { useBlogs } from './hooks/useBlogs'
+import UserContext from './UserContext'
 
 const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [user, setUser] = useState(null)
+  const { user, setUser } = useContext(UserContext)
   const navigate = useNavigate()
   const { notify } = useNotification()
   const { blogs } = useBlogs()
@@ -32,7 +33,7 @@ const App = () => {
       setUser(user)
       blogService.setToken(user.token)
     }
-  }, [])
+  }, [setUser])
 
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogAppUser')
@@ -140,7 +141,7 @@ const App = () => {
               </div>
             }
           />
-          <Route path='/blogs/:id' element={<Blog blog={blog} user={user} />} />
+          <Route path='/blogs/:id' element={<Blog blog={blog} />} />
           <Route path='/create' element={user && <BlogForm />} />
           <Route path='/login' element={!user && loginForm()} />
           <Route path='*' element={<h2>404 - Page not found</h2>} />
