@@ -18,9 +18,13 @@ import UserContext from '../UserContext'
 
 const Blog = ({ blog }) => {
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const { like, removeBlog } = useBlogs()
+  const { like, removeBlog, isPending } = useBlogs()
   const navigate = useNavigate()
   const { user } = useContext(UserContext)
+
+  if (isPending) {
+    return null
+  }
 
   if (!blog) {
     return <h2>404 - Page not found</h2>

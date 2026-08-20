@@ -14,6 +14,7 @@ import Notification from './components/Notification'
 import ErrorBoundary from './components/ErrorBoundary'
 import blogService from './services/blogs'
 import loginService from './services/login'
+import userService from './services/persistentUser'
 import useNotification from './hooks/useNotification'
 import { useBlogs } from './hooks/useBlogs'
 import UserContext from './UserContext'
@@ -27,7 +28,7 @@ const App = () => {
   const { blogs } = useBlogs()
 
   useEffect(() => {
-    const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
+    const loggedUserJSON = userService.getUser()
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
       setUser(user)
@@ -36,7 +37,7 @@ const App = () => {
   }, [setUser])
 
   const handleLogout = () => {
-    window.localStorage.removeItem('loggedBlogAppUser')
+    userService.removeUser()
     setUsername('')
     setPassword('')
     setUser(null)
@@ -47,7 +48,7 @@ const App = () => {
 
     try {
       const user = await loginService.login({ username, password })
-      window.localStorage.setItem('loggedBlogAppUser', JSON.stringify(user))
+      userService.saveUser(user)
       blogService.setToken(user.token)
       setUser(user)
       navigate('/')
@@ -86,7 +87,7 @@ const App = () => {
   )
 
   const match = useMatch('/blogs/:id')
-  const blog = match ? blogs.find((blog) => blog.id === match.params.id) : null
+  const blog = match ? blogs?.find((blog) => blog.id === match.params.id) : null
 
   const style = { '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }
 
