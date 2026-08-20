@@ -7,17 +7,13 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material'
-import { useEffect, useState } from 'react'
-import userService from '../services/user'
+import { useUsers } from '../hooks/useUsers'
+import { Link } from 'react-router-dom'
 
 const UserList = () => {
-  const [users, setUsers] = useState(null)
+  const { users, isPending } = useUsers()
 
-  useEffect(() => {
-    userService.getAll().then((data) => setUsers(data))
-  }, [])
-
-  if (!users) {
+  if (isPending || !users) {
     return null
   }
 
@@ -38,7 +34,9 @@ const UserList = () => {
           <TableBody>
             {users?.map((row) => (
               <TableRow key={row.id}>
-                <TableCell>{row.name}</TableCell>
+                <TableCell>
+                  <Link to={'/users/' + row.id}>{row.name}</Link>
+                </TableCell>
                 <TableCell>{row.username}</TableCell>
                 <TableCell>{row.blogs.length}</TableCell>
               </TableRow>

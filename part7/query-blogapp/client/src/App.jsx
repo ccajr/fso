@@ -12,6 +12,7 @@ import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
 import Notification from './components/Notification'
 import ErrorBoundary from './components/ErrorBoundary'
+import User from './components/User'
 import UserList from './components/UserList'
 import blogService from './services/blogs'
 import loginService from './services/login'
@@ -19,29 +20,31 @@ import persistentUser from './services/persistentUser'
 import useNotification from './hooks/useNotification'
 import { useBlogs } from './hooks/useBlogs'
 import UserContext from './UserContext'
+import { useUsers } from './hooks/useUsers'
 
 const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const { user, setUser } = useContext(UserContext)
+  const { user: loginUser, setUser: setLoginUser } = useContext(UserContext)
   const navigate = useNavigate()
   const { notify } = useNotification()
   const { blogs } = useBlogs()
+  const { users, isPending: userIsPending } = useUsers()
 
   useEffect(() => {
     const loggedUserJSON = persistentUser.getUser()
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
-      setUser(user)
+      setLoginUser(user)
       blogService.setToken(user.token)
     }
-  }, [setUser])
+  }, [setLoginUser])
 
   const handleLogout = () => {
     persistentUser.removeUser()
     setUsername('')
     setPassword('')
-    setUser(null)
+    setLoginUser(null)
   }
 
   const handleLogin = async (event) => {
@@ -51,7 +54,7 @@ const App = () => {
       const user = await loginService.login({ username, password })
       persistentUser.saveUser(user)
       blogService.setToken(user.token)
-      setUser(user)
+      setLoginUser(user)
       navigate('/')
       setUsername('')
       setPassword('')
@@ -90,6 +93,11 @@ const App = () => {
   const match = useMatch('/blogs/:id')
   const blog = match ? blogs?.find((blog) => blog.id === match.params.id) : null
 
+  const userMatch = useMatch('/users/:id')
+  const user = userMatch
+    ? users?.find((user) => user.id === userMatch.params.id)
+    : null
+
   const style = { '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' } }
 
   return (
@@ -105,12 +113,12 @@ const App = () => {
           <Button color='inherit' component={Link} to='/users' sx={style}>
             users
           </Button>
-          {!user && (
+          {!loginUser && (
             <Button color='inherit' component={Link} to='/login' sx={style}>
               login
             </Button>
           )}
-          {user && (
+          {loginUser && (
             <>
               <Button color='inherit' component={Link} to='/create' sx={style}>
                 new blog
@@ -146,10 +154,14 @@ const App = () => {
               </div>
             }
           />
-          <Route path='/users' element={<UserList />} />
           <Route path='/blogs/:id' element={<Blog blog={blog} />} />
-          <Route path='/create' element={user && <BlogForm />} />
-          <Route path='/login' element={!user && loginForm()} />
+          <Route path='/users' element={<UserList />} />
+          <Route
+            path='/users/:id'
+            element={<User user={user} isPending={userIsPending} />}
+          />
+          <Route path='/create' element={loginUser && <BlogForm />} />
+          <Route path='/login' element={!loginUser && loginForm()} />
           <Route path='*' element={<h2>404 - Page not found</h2>} />
         </Routes>
       </ErrorBoundary>
