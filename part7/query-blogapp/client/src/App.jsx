@@ -12,9 +12,10 @@ import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
 import Notification from './components/Notification'
 import ErrorBoundary from './components/ErrorBoundary'
+import UserList from './components/UserList'
 import blogService from './services/blogs'
 import loginService from './services/login'
-import userService from './services/persistentUser'
+import persistentUser from './services/persistentUser'
 import useNotification from './hooks/useNotification'
 import { useBlogs } from './hooks/useBlogs'
 import UserContext from './UserContext'
@@ -28,7 +29,7 @@ const App = () => {
   const { blogs } = useBlogs()
 
   useEffect(() => {
-    const loggedUserJSON = userService.getUser()
+    const loggedUserJSON = persistentUser.getUser()
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
       setUser(user)
@@ -37,7 +38,7 @@ const App = () => {
   }, [setUser])
 
   const handleLogout = () => {
-    userService.removeUser()
+    persistentUser.removeUser()
     setUsername('')
     setPassword('')
     setUser(null)
@@ -48,7 +49,7 @@ const App = () => {
 
     try {
       const user = await loginService.login({ username, password })
-      userService.saveUser(user)
+      persistentUser.saveUser(user)
       blogService.setToken(user.token)
       setUser(user)
       navigate('/')
@@ -101,6 +102,9 @@ const App = () => {
           <Button color='inherit' component={Link} to='/' sx={style}>
             blogs
           </Button>
+          <Button color='inherit' component={Link} to='/users' sx={style}>
+            users
+          </Button>
           {!user && (
             <Button color='inherit' component={Link} to='/login' sx={style}>
               login
@@ -142,6 +146,7 @@ const App = () => {
               </div>
             }
           />
+          <Route path='/users' element={<UserList />} />
           <Route path='/blogs/:id' element={<Blog blog={blog} />} />
           <Route path='/create' element={user && <BlogForm />} />
           <Route path='/login' element={!user && loginForm()} />
