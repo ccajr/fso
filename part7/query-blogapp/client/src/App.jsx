@@ -21,6 +21,7 @@ import useNotification from './hooks/useNotification'
 import { useBlogs } from './hooks/useBlogs'
 import UserContext from './UserContext'
 import { useUsers } from './hooks/useUsers'
+import BlogList from './components/BlogList'
 
 const App = () => {
   const [username, setUsername] = useState('')
@@ -135,25 +136,7 @@ const App = () => {
         <Notification />
 
         <Routes>
-          <Route
-            path='/'
-            element={
-              <div>
-                <h2>blogs</h2>
-                <ul>
-                  {blogs
-                    ?.toSorted((a, b) => b.likes - a.likes)
-                    .map((blog) => (
-                      <li key={blog.id}>
-                        <Link to={`/blogs/${blog.id}`}>
-                          {blog.title} by {blog.author}
-                        </Link>
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            }
-          />
+          <Route path='/' element={<BlogList blogs={blogs} />} />
           <Route path='/blogs/:id' element={<Blog blog={blog} />} />
           <Route path='/users' element={<UserList />} />
           <Route

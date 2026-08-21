@@ -47,6 +47,7 @@ blogsRouter.delete('/:id', userExtractor, async (request, response) => {
   user.blogs = user.blogs.filter((b) => b.id.toString() !== blog.id.toString())
 
   await blog.deleteOne()
+  await Comment.deleteMany({ blog: { $eq: blog.id } })
   response.status(204).end()
 })
 
@@ -84,6 +85,7 @@ blogsRouter.post('/:id/comments', userExtractor, async (request, response) => {
     return response.status(404).send({ error: 'blog does not exist' })
   }
 
+  comment.blog = blog.id
   const savedComment = await comment.save()
 
   blog.comments = blog.comments.concat(savedComment._id)

@@ -97,7 +97,7 @@ const Blog = ({ blog }) => {
         <br />
         <Typography variant='h6'>comments</Typography>
         <form onSubmit={handleAddComment}>
-          <div>
+          <div style={{ display: 'flex' }}>
             <TextField
               label='add a comment'
               size='small'
