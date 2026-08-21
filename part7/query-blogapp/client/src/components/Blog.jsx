@@ -11,16 +11,20 @@ import {
   DialogContentText,
   DialogActions,
   Link,
+  TextField,
+  Box,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { useBlogs } from '../hooks/useBlogs'
+import { useField } from '../hooks/useField'
 import UserContext from '../UserContext'
 
 const Blog = ({ blog }) => {
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const { like, removeBlog, isPending } = useBlogs()
+  const { like, removeBlog, isPending, addComment } = useBlogs()
   const navigate = useNavigate()
   const { user } = useContext(UserContext)
+  const comment = useField('text')
 
   if (isPending) {
     return null
@@ -34,6 +38,12 @@ const Blog = ({ blog }) => {
 
   const handleLike = () => {
     like(blog)
+  }
+
+  const handleAddComment = (event) => {
+    event.preventDefault()
+    addComment({ id: blog.id, commentObject: { content: comment.value } })
+    comment.reset()
   }
 
   const handleRemove = () => {
@@ -62,32 +72,43 @@ const Blog = ({ blog }) => {
         </Link>
         <Typography
           variant='body2'
-          gutterBottom
-          sx={{ color: 'text.secondary' }}
+          sx={{ color: 'text.secondary', marginTop: 6 + 'px' }}
         >
           Added by {blog.user.name}
         </Typography>
-      </CardContent>
-      <CardActions sx={{ marginLeft: 8 + 'px', marginTop: -16 + 'px' }}>
-        <Typography variant='body1'>{blog.likes} likes</Typography>
-        {user && (
-          <Button variant='outlined' size='small' onClick={handleLike}>
-            like
-          </Button>
-        )}
-        {isCreator && (
-          <Button
-            variant='outlined'
-            size='small'
-            color='error'
-            onClick={() => setConfirmOpen(true)}
-          >
-            remove
-          </Button>
-        )}
-      </CardActions>
-      <CardContent>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+          <Typography variant='body1'>{blog.likes} likes</Typography>
+          {user && (
+            <Button variant='outlined' size='small' onClick={handleLike}>
+              like
+            </Button>
+          )}
+          {isCreator && (
+            <Button
+              variant='outlined'
+              size='small'
+              color='error'
+              onClick={() => setConfirmOpen(true)}
+            >
+              remove
+            </Button>
+          )}
+        </Box>
+        <br />
         <Typography variant='h6'>comments</Typography>
+        <form onSubmit={handleAddComment}>
+          <div>
+            <TextField
+              label='add a comment'
+              size='small'
+              {...comment.inputProps}
+              sx={{ marginRight: 8 + 'px' }}
+            ></TextField>
+            <Button variant='contained' size='medium' type='submit'>
+              add comment
+            </Button>
+          </div>
+        </form>
         <ul>
           {blog.comments.map((comment) => (
             <li key={comment.id}>{comment.content}</li>

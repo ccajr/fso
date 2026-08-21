@@ -50,7 +50,7 @@ blogsRouter.delete('/:id', userExtractor, async (request, response) => {
   response.status(204).end()
 })
 
-blogsRouter.put('/:id', async (request, response) => {
+blogsRouter.put('/:id', userExtractor, async (request, response) => {
   const { title, author, url, likes } = request.body
 
   const blog = await Blog.findById(request.params.id)
@@ -71,7 +71,7 @@ blogsRouter.put('/:id', async (request, response) => {
   response.json(updatedBlog)
 })
 
-blogsRouter.post('/:id/comments', async (request, response) => {
+blogsRouter.post('/:id/comments', userExtractor, async (request, response) => {
   const comment = new Comment(request.body)
 
   if (!comment.content) {
