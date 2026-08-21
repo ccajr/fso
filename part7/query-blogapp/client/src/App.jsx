@@ -1,31 +1,23 @@
-import { useState, useEffect, useContext } from 'react'
+import { useEffect, useContext } from 'react'
 import { Routes, Route, Link, useNavigate, useMatch } from 'react-router-dom'
-import {
-  Container,
-  AppBar,
-  Button,
-  TextField,
-  Toolbar,
-  Typography,
-} from '@mui/material'
+import { Container, AppBar, Button, Toolbar, Typography } from '@mui/material'
 import Blog from './components/Blog'
 import BlogForm from './components/BlogForm'
 import Notification from './components/Notification'
 import ErrorBoundary from './components/ErrorBoundary'
 import User from './components/User'
 import UserList from './components/UserList'
+import BlogList from './components/BlogList'
+import LoginForm from './components/LoginForm'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import persistentUser from './services/persistentUser'
 import useNotification from './hooks/useNotification'
 import { useBlogs } from './hooks/useBlogs'
-import UserContext from './UserContext'
 import { useUsers } from './hooks/useUsers'
-import BlogList from './components/BlogList'
+import UserContext from './UserContext'
 
 const App = () => {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
   const { user: loginUser, setUser: setLoginUser } = useContext(UserContext)
   const navigate = useNavigate()
   const { notify } = useNotification()
@@ -43,53 +35,20 @@ const App = () => {
 
   const handleLogout = () => {
     persistentUser.removeUser()
-    setUsername('')
-    setPassword('')
     setLoginUser(null)
   }
 
-  const handleLogin = async (event) => {
-    event.preventDefault()
-
+  const handleLogin = async (credentials) => {
     try {
-      const user = await loginService.login({ username, password })
+      const user = await loginService.login(credentials)
       persistentUser.saveUser(user)
       blogService.setToken(user.token)
       setLoginUser(user)
       navigate('/')
-      setUsername('')
-      setPassword('')
     } catch {
       notify('wrong username or password', 'error')
     }
   }
-
-  const loginForm = () => (
-    <form onSubmit={handleLogin}>
-      <div>
-        <h2>Log in to application</h2>
-        <TextField
-          label='username'
-          type='text'
-          value={username}
-          onChange={({ target }) => setUsername(target.value)}
-          variant='standard'
-        />
-      </div>
-      <div>
-        <TextField
-          label='password'
-          type='password'
-          value={password}
-          onChange={({ target }) => setPassword(target.value)}
-          variant='standard'
-        />
-      </div>
-      <Button type='submit' variant='contained' style={{ marginTop: 10 }}>
-        login
-      </Button>
-    </form>
-  )
 
   const match = useMatch('/blogs/:id')
   const blog = match ? blogs?.find((blog) => blog.id === match.params.id) : null
@@ -144,7 +103,10 @@ const App = () => {
             element={<User user={user} isPending={userIsPending} />}
           />
           <Route path='/create' element={loginUser && <BlogForm />} />
-          <Route path='/login' element={!loginUser && loginForm()} />
+          <Route
+            path='/login'
+            element={!loginUser && <LoginForm doLogin={handleLogin} />}
+          />
           <Route path='*' element={<h2>404 - Page not found</h2>} />
         </Routes>
       </ErrorBoundary>
