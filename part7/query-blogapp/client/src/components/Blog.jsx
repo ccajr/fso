@@ -86,6 +86,14 @@ const Blog = ({ blog }) => {
           </Button>
         )}
       </CardActions>
+      <CardContent>
+        <Typography variant='h6'>comments</Typography>
+        <ul>
+          {blog.comments.map((comment) => (
+            <li key={comment.id}>{comment.content}</li>
+          ))}
+        </ul>
+      </CardContent>
 
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Remove blog</DialogTitle>
